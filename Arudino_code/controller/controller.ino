@@ -80,17 +80,18 @@ void loop()
 	//print1IRval(IR_val_1);
 
 	/* get the force being applied to the remote robot */
+	serialMsg = "";
 	while ( Serial.available() > 0 )
 	{
 		char inChar = Serial.read();
-		serialMsg += inChar;	
+		serialMsg += inChar;
 	}
 
 	getForce( serialMsg, &force_1 );
-
 	/* move servo */
 	servo_val_1= map(IR_val_1, 0, 1023, 0, 179);     // scale it to use it with the servo (value between 0 and 180) 
-	servo_obj_1.write(servo_val_1);                  // sets the servo position according to the scaled value 
+	Serial.println(force_1);
+	//servo_obj_1.write(servo_val_1);                  // sets the servo position according to the scaled value 
 	delay(15);                           // waits for the servo to get there
 }
 
