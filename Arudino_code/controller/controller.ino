@@ -51,7 +51,6 @@ int strToInt(String string)
 
 boolean getForce( String string, int * num1 )
 {
-	
 	int index1 = -1;
 	int index2 = -1;
 	int index3 = -1;
@@ -74,7 +73,9 @@ boolean getForce( String string, int * num1 )
 		//*num1 = strToInt( string1 );
 		*num1 = (string[index1+1]-'0');
 		return true;
-	} else {
+	} 
+	else 
+	{
 		return false;
 	}
 }
