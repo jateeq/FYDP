@@ -1,7 +1,14 @@
-// Controlling a servo position using a potentiometer (variable resistor) 
-// by Michal Rinott <http://people.interaction-ivrea.it/m.rinott> 
+/*
+Authors: Jawad Ateeq, Jake Park
+*/
 
 #include <Servo.h>
+
+/* Constants */
+
+//Min dist flag has to move in either direction to move servo
+const int MIN_FLAG_DISP = 30; 
+const int MIN_SERVO_DISP = 20;
 
 /* create servo object to control a servo */
 Servo servo_obj_1;  
@@ -9,23 +16,31 @@ Servo servo_obj_2;
 
 int baud_rate = 9600;
 
-/*Initialize IR pins and values. There are 2 IR sensors being used - sensor 1 relates to the index finger, sensor */
+/*Initialize IR pins and values. There are 2 IR sensors being used - 
+sensor 1 relates to the index finger, sensor */
 int IR_pin_1 = 0; 
 int IR_pin_2 = 1; 
-float IR_val_1 = 0; //[V]
-float IR_val_2 = 0; //[V]
+int IR_val_1 = 0; 
+int IR_val_2 = 0;
+int IR_val_1_prev = 0;
+int IR_val_2_prev = 0;
 float IR_res = 5.0 / 1023;
+
+//Direction flag is moving in
+int dir = -1;
 
 /*Initialize servo pins and values*/
 int servo_pin_1 = 9;
 int servo_pin_2 = 10;
-int servo_val_1 = 0; 
-int servo_val_2 = 0;
+int servo_pos_1 = 0; 
+int servo_pos_2 = 0;
+int servo_pos_1_prev = 0;
+int servo_pos_2_prev = 0;
 int force_1 = 0;
 int force_2 = 0;
 String serialMsg;
 
-void print1IRval( float val )
+void print1IRval( int val )
 {
 	Serial.print('i');
 	Serial.print(val, DEC);
@@ -39,7 +54,6 @@ float strToFloat( String string)
 	char floatbuf[32]; // make this at least big enough for the whole string
 	string.toCharArray(floatbuf, sizeof(floatbuf));
 	return atof(floatbuf);
-	
 }
 
 int strToInt(String string)
@@ -91,10 +105,31 @@ void setup()
  
 void loop() 
 {
+	//Record previous IR vals so change in flag position can be found
+	IR_val_1_prev = IR_val_1;
+	IR_val_2_prev = IR_val_2;
+
 	/* read the IR sensor and convert to voltage*/
 	IR_val_1 = analogRead(IR_pin_1);
-	IR_val_2 = analogRead(IR_pin_2);	
-	print1IRval(IR_val_1*IR_res);
+	IR_val_2 = analogRead(IR_pin_2);
+
+	//send the IR value in voltage to the remote robot
+	//this is used to figure out the finger position
+	//print1IRval(IR_val_1*IR_res);
+	print1IRval(IR_val_1);
+	
+	/* Find out direction of flag movement */
+	if ( IR_val_1 - IR_val_1_prev > MIN_FLAG_DISP )
+	{
+		//flag is moving away from IR sensor (finger moving down)		
+		dir = 1;
+	}
+	else if ( IR_val_1 - IR_val_1_prev < ( -MIN_FLAG_DISP ) )
+	{
+		//flag is moving towards IR sensor (finger moving up)		
+		dir = 0;
+	}
+	
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
 	while ( Serial.available() > 0 )
@@ -102,20 +137,26 @@ void loop()
 		char inChar = Serial.read();
 		serialMsg += inChar;
 	}
-        force_1 = -1;
+	
+	//reset force from last time
+	force_1 = -1; 
+	
 	if (getForce( serialMsg, &force_1 ))
 	{
-		/* move servo */
-		if (force_1  == 1) //object detected
+		/* move servo if no object detected */
+		if ( force_1  == 1 )
 		{
 			//hold position
 		}
-		else if (force_1 == 0)
+		else if ( force_1 == 0 )
 		{
-			servo_val_1 = map(IR_val_1, 0, 1023, 0, 179); // scale it to use it with the servo (value between 0 and 180)
-			servo_obj_1.write(servo_val_1); // sets the servo position according to the scaled value 
+			// scale it to use it with the servo (value between 0 and 180)
+			servo_pos_1 = map(IR_val_1, 0, 1023, 0, 179);
+			
+			// sets the servo position according to the scaled value 
+			servo_obj_1.write(servo_pos_1); 
 		}
 	}        	
         
-	delay(15); // waits for the servo to get there
+	delay(1000); // waits for the servo to get there
 }
