@@ -52,7 +52,7 @@ int strToInt(String string)
 boolean getForce( String string, int * num1 )
 {
 	
-int index1 = -1;
+	int index1 = -1;
 	int index2 = -1;
 	int index3 = -1;
 	int temp = 0;
@@ -68,16 +68,15 @@ int index1 = -1;
 		temp++;
 	}
 
-        if (index1 < index2 && index1 != -1 && index2 != -1)
-        {
-      	 // String string1 = string.substring( index1+1, index2-1 );
-      	  //*num1 = strToInt( string1 );
-          *num1 = (string[index1+1]-'0');
-
-          return true;
-        } else {
-           return false;
-        }
+	if (index1 < index2 && index1 != -1 && index2 != -1)
+	{
+		// String string1 = string.substring( index1+1, index2-1 );
+		//*num1 = strToInt( string1 );
+		*num1 = (string[index1+1]-'0');
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void setup() 
@@ -104,18 +103,18 @@ void loop()
 	}
         force_1 = -1;
 	if (getForce( serialMsg, &force_1 ))
-        {
-          	/* move servo */
-        	if (force_1  == 1) //object detected
-        	{
-        		//hold position
-        	}
-        	else if (force_1 == 0)
-        	{
-        		servo_val_1 = map(IR_val_1, 0, 1023, 0, 179); // scale it to use it with the servo (value between 0 and 180)
-            		servo_obj_1.write(servo_val_1);                  // sets the servo position according to the scaled value 
-         	}
-        }        	
+	{
+		/* move servo */
+		if (force_1  == 1) //object detected
+		{
+			//hold position
+		}
+		else if (force_1 == 0)
+		{
+			servo_val_1 = map(IR_val_1, 0, 1023, 0, 179); // scale it to use it with the servo (value between 0 and 180)
+			servo_obj_1.write(servo_val_1); // sets the servo position according to the scaled value 
+		}
+	}        	
         
-	delay(15);                           // waits for the servo to get there
+	delay(15); // waits for the servo to get there
 }
