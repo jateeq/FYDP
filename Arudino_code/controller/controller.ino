@@ -1,14 +1,17 @@
 /*
 Authors: Jawad Ateeq, Jake Park
 */
-
+adding his stuff
 #include <Servo.h>
 
 /* Constants */
 
 //Min dist flag has to move in either direction to move servo
-const int MIN_FLAG_DISP = 30; 
+const int MIN_FLAG_DISP = 10;
 const int MIN_SERVO_DISP = 20;
+const int MIN_SERVO_POS = 50;	//degrees
+const int MAX_SERVO_POS = 100;	//degrees
+const int LOOP_DELAY = 50;		//ms
 
 /* create servo object to control a servo */
 Servo servo_obj_1;  
@@ -101,8 +104,13 @@ void setup()
 	servo_obj_2.attach(servo_pin_2);
 
 	Serial.begin(baud_rate);
+	
+	//starting position of servos is 
+	servo_pos_1 = MIN_SERVO_POS;
 } 
- 
+
+//int x = 20;
+
 void loop() 
 {
 	//Record previous IR vals so change in flag position can be found
@@ -118,16 +126,22 @@ void loop()
 	//print1IRval(IR_val_1*IR_res);
 	print1IRval(IR_val_1);
 	
-	/* Find out direction of flag movement */
-	if ( IR_val_1 - IR_val_1_prev > MIN_FLAG_DISP )
-	{
-		//flag is moving away from IR sensor (finger moving down)		
-		dir = 1;
-	}
-	else if ( IR_val_1 - IR_val_1_prev < ( -MIN_FLAG_DISP ) )
+	/* Find out direction of flag movement 
+		Note that the sensor value decreases the farther it is from the 
+		sensor*/
+	if ( ( IR_val_1 - IR_val_1_prev ) > MIN_FLAG_DISP )
 	{
 		//flag is moving towards IR sensor (finger moving up)		
 		dir = 0;
+	}
+	else if ( ( IR_val_1 - IR_val_1_prev ) < ( -MIN_FLAG_DISP ) )
+	{
+		//flag is moving away from IR sensor (finger moving down)
+		dir = 1;
+	}
+	else
+	{
+		dir = -1;
 	}
 	
 	/* get the force being applied to the remote robot */
@@ -141,22 +155,42 @@ void loop()
 	//reset force from last time
 	force_1 = -1; 
 	
-	if (getForce( serialMsg, &force_1 ))
-	{
+	//if (getForce( serialMsg, &force_1 ))
+	//{
 		/* move servo if no object detected */
-		if ( force_1  == 1 )
-		{
-			//hold position
-		}
-		else if ( force_1 == 0 )
-		{
+		//if ( force_1  == 1 )
+		//{
+			//hold previous position
+		//}
+		//else if ( force_1 == 0 )
+		//{
+		/*
+			if (dir == 1)
+			{
+				servo_pos_1 += MIN_SERVO_DISP;
+			}
+			else if (dir == 0)
+			{
+				servo_pos_1 -= MIN_SERVO_DISP;
+			}
+			
+			if ( servo_pos_1 < MIN_SERVO_POS )
+			{
+				servo_pos_1 = MIN_SERVO_POS;
+			}
+			else if ( servo_pos_1 > MAX_SERVO_POS )
+			{
+				servo_pos_1 = MAX_SERVO_POS;
+			}
+			*/
 			// scale it to use it with the servo (value between 0 and 180)
-			servo_pos_1 = map(IR_val_1, 0, 1023, 0, 179);
+			//servo_pos_1 = map(IR_val_1, 0, 1023, 0, 179);
 			
 			// sets the servo position according to the scaled value 
 			servo_obj_1.write(servo_pos_1); 
-		}
-	}        	
+		//}
+	//}   
+	//print1IRval(servo_pos_1);
         
-	delay(1000); // waits for the servo to get there
+	delay( LOOP_DELAY ); // waits for the servo to get there
 }
