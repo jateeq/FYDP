@@ -12,7 +12,7 @@ const int MIN_SERVO_DISP = 20;
 const int MIN_SERVO_POS = 50;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
 const int LOOP_DELAY = 2000;		//ms
-
+const int NUM_IR_READINGS = 5;
 /* create servo object to control a servo */
 Servo servo_obj_1;  
 Servo servo_obj_2;
@@ -23,8 +23,8 @@ int baud_rate = 9600;
 sensor 1 relates to the index finger, sensor */
 int IR_pin_1 = 0; 
 int IR_pin_2 = 1; 
-int IR_val_1[5] = {}; 
-int IR_val_2[5] = {};
+int IR_val_1[NUM_IR_READINGS] = {}; 
+int IR_val_2[NUM_IR_READINGS] = {};
 int IR_val_1_prev = 0;
 int IR_val_2_prev = 0;
 float IR_res = 5.0 / 1023;
@@ -114,32 +114,16 @@ void setup()
 void loop() 
 {
 	//Record previous IR vals so change in flag position can be found
-	IR_val_1_prev = IR_val_1[0];
-	IR_val_2_prev = IR_val_2[0];
+	//IR_val_1_prev = IR_val_1[0];
+	//IR_val_2_prev = IR_val_2[0];
 
 	/* read the IR sensor and convert to voltage*/
-	IR_val_1[0] = analogRead(IR_pin_1);
-	IR_val_2[0] = analogRead(IR_pin_2);
-
-	delay(50);
-	
-	IR_val_1[1] = analogRead(IR_pin_1);
-	IR_val_2[1] = analogRead(IR_pin_2);
-	
-	delay(50);
-	
-	IR_val_1[2] = analogRead(IR_pin_1);
-	IR_val_2[2] = analogRead(IR_pin_2);
-	
-	delay(50);
-	
-	IR_val_1[3] = analogRead(IR_pin_1);
-	IR_val_2[3] = analogRead(IR_pin_2);
-	
-	delay(50);
-	
-	IR_val_1[4] = analogRead(IR_pin_1);
-	IR_val_2[4] = analogRead(IR_pin_2);
+	for (int i = 0 ; i<NUM_IR_READINGS ; i++)
+	{
+		IR_val_1[i] = analogRead(IR_pin_1);
+		IR_val_2[i] = analogRead(IR_pin_2);
+		delay(50);
+	}	
 	
 	//send the IR value in voltage to the remote robot
 	//this is used to figure out the finger position
