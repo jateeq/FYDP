@@ -5,19 +5,18 @@ Authors: Jawad Ateeq, Jake Park
 #include <Servo.h>
 
 /* Constants */
-
-//Min dist flag has to move in either direction to move servo
-const int MIN_FLAG_DISP = 10;
-const int MIN_SERVO_DISP = 20;
+const int MIN_FLAG_DISP = 10;	//Min dist flag has to move in either direction to move servo
+const int MIN_SERVO_DISP = 20;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS = 50;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
-const int LOOP_DELAY = 2000;		//ms
-const int NUM_IR_READINGS = 5;
+const int LOOP_DELAY = 2000;	//ms
+const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
+const int BAUD_RATE = 9600; 
+
 /* create servo object to control a servo */
 Servo servo_obj_1;  
 Servo servo_obj_2;
 
-int baud_rate = 9600;
 
 /*Initialize IR pins and values. There are 2 IR sensors being used - 
 sensor 1 relates to the index finger, sensor */
@@ -43,59 +42,13 @@ int force_1 = 0;
 int force_2 = 0;
 String serialMsg;
 
-void print1IRval( int val )
-{
-	Serial.print('i');
-	Serial.print(val, DEC);
-	Serial.println('e');
-}
+/* Function Definitions */
+void print1IRval( int val );
+float strToFloat( String string);
+int strToInt(String string);
+boolean getForce( String string, int * num1 );
 
-/*Converts a string to float. Can't use atof directly since it expects a char 
-array as parameter, so need to convert strign to char array first*/
-float strToFloat( String string)
-{
-	char floatbuf[32]; // make this at least big enough for the whole string
-	string.toCharArray(floatbuf, sizeof(floatbuf));
-	return atof(floatbuf);
-}
 
-int strToInt(String string)
-{
-	char floatbuf[32]; // make this at least big enough for the whole string
-	string.toCharArray(floatbuf, sizeof(floatbuf));
-	return atoi(floatbuf);
-}
-
-boolean getForce( String string, int * num1 )
-{
-	int index1 = -1;
-	int index2 = -1;
-	int index3 = -1;
-	int temp = 0;
-
-	while( temp < string.length() )
-	{
-		if (string[temp] == 'T')
-			index1 = temp;
-		else if (string[temp] == '/' )
-			index2 = temp;
-		else if (string[temp] == ';' )
-			index3 = temp;
-		temp++;
-	}
-
-	if (index1 < index2 && index1 != -1 && index2 != -1)
-	{
-		// String string1 = string.substring( index1+1, index2-1 );
-		//*num1 = strToInt( string1 );
-		*num1 = (string[index1+1]-'0');
-		return true;
-	} 
-	else 
-	{
-		return false;
-	}
-}
 
 void setup() 
 { 
@@ -103,7 +56,7 @@ void setup()
 	servo_obj_1.attach(servo_pin_1);  
 	servo_obj_2.attach(servo_pin_2);
 
-	Serial.begin(baud_rate);
+	Serial.begin( BAUD_RATE );
 	
 	//starting position of servos is 
 	servo_pos_1 = MIN_SERVO_POS;
@@ -202,4 +155,58 @@ void loop()
 	//print1IRval(servo_pos_1);
         
 	delay( LOOP_DELAY ); // waits for the servo to get there
+}
+
+void print1IRval( int val )
+{
+	Serial.print('i');
+	Serial.print(val, DEC);
+	Serial.println('e');
+}
+
+/*Converts a string to float. Can't use atof directly since it expects a char 
+array as parameter, so need to convert strign to char array first*/
+float strToFloat( String string)
+{
+	char floatbuf[32]; // make this at least big enough for the whole string
+	string.toCharArray(floatbuf, sizeof(floatbuf));
+	return atof(floatbuf);
+}
+
+int strToInt(String string)
+{
+	char floatbuf[32]; // make this at least big enough for the whole string
+	string.toCharArray(floatbuf, sizeof(floatbuf));
+	return atoi(floatbuf);
+}
+
+boolean getForce( String string, int * num1 )
+{
+	int index1 = -1;
+	int index2 = -1;
+	int index3 = -1;
+	int temp = 0;
+
+	while( temp < string.length() )
+	{
+		if (string[temp] == 'T')
+			index1 = temp;
+		else if (string[temp] == '/' )
+			index2 = temp;
+		else if (string[temp] == ';' )
+			index3 = temp;
+		temp++;
+	}
+
+	if (index1 < index2 && index1 != -1 && index2 != -1)
+	{
+		// String string1 = string.substring( index1+1, index2-1 );
+		//*num1 = strToInt( string1 );
+		*num1 = (string[index1+1]-'0');
+		return true;
+	} 
+	else 
+	{
+		return false;
+	}
 }
