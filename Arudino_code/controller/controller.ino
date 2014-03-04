@@ -12,31 +12,28 @@ const int MIN_SERVO_POS = 50;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
 const int LOOP_DELAY = 2000;	//ms
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
-const int BAUD_RATE = 9600; 
-const float IR_RES = 5.0/1023; 
+const int BAUD_RATE = 9600; 	//Arduino Baud Rate
+const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
+const int IR_PIN_1 = 0;			//IR 1 connected to analog pin 1
+const int IR_PIN_2 = 1;			//IR 2 connected to analog pin 2
+const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
+const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
 
 /* House Keeping */
 Servo servo_obj_1;	//Servo 1 
 Servo servo_obj_2;	//Servo 2
 int dir = -1;		//Direction flag is moving in
 
+
 /*Initialize IR pins and values. There are 2 IR sensors being used - 
 sensor 1 relates to the index finger, sensor */
-int IR_pin_1 = 0; 
-int IR_pin_2 = 1; 
-int IR_val_1[NUM_IR_READINGS] = {}; 
-int IR_val_2[NUM_IR_READINGS] = {};
-int IR_val_1_prev = 0;
-int IR_val_2_prev = 0;
-
-
-
-
+int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
+int IR_val_2[ NUM_IR_READINGS ] = { -1 };
+int IR_val_1_prev = -1;
+int IR_val_2_prev = -1;
 
 
 /*Initialize servo pins and values*/
-int servo_pin_1 = 9;
-int servo_pin_2 = 10;
 int servo_pos_1 = 0; 
 int servo_pos_2 = 0;
 int servo_pos_1_prev = 0;
@@ -56,8 +53,8 @@ boolean getForce( String string, int * num1 );
 void setup() 
 { 
 	/* attach servos to the servo objects */
-	servo_obj_1.attach(servo_pin_1);  
-	servo_obj_2.attach(servo_pin_2);
+	servo_obj_1.attach( SERVO_PIN_1 );  
+	servo_obj_2.attach( SERVO_PIN_2 );
 
 	Serial.begin( BAUD_RATE );
 	
@@ -76,8 +73,8 @@ void loop()
 	/* read the IR sensor and convert to voltage*/
 	for (int i = 0 ; i<NUM_IR_READINGS ; i++)
 	{
-		IR_val_1[i] = analogRead(IR_pin_1);
-		IR_val_2[i] = analogRead(IR_pin_2);
+		IR_val_1[i] = analogRead(IR_PIN_1);
+		IR_val_2[i] = analogRead(IR_PIN_2);
 		delay(50);
 	}	
 	
