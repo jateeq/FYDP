@@ -1,8 +1,9 @@
 /*
-Authors: Jawad Ateeq, Jake Park
+	Authors: Jawad Ateeq, Jake Park
 */
 
 #include <Servo.h>
+
 
 /* Constants */
 const int MIN_FLAG_DISP = 10;	//Min dist flag has to move in either direction to move servo
@@ -12,11 +13,12 @@ const int MAX_SERVO_POS = 100;	//degrees
 const int LOOP_DELAY = 2000;	//ms
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 
+const float IR_RES = 5.0/1023; 
 
-/* create servo object to control a servo */
-Servo servo_obj_1;  
-Servo servo_obj_2;
-
+/* House Keeping */
+Servo servo_obj_1;	//Servo 1 
+Servo servo_obj_2;	//Servo 2
+int dir = -1;		//Direction flag is moving in
 
 /*Initialize IR pins and values. There are 2 IR sensors being used - 
 sensor 1 relates to the index finger, sensor */
@@ -26,10 +28,11 @@ int IR_val_1[NUM_IR_READINGS] = {};
 int IR_val_2[NUM_IR_READINGS] = {};
 int IR_val_1_prev = 0;
 int IR_val_2_prev = 0;
-float IR_res = 5.0 / 1023;
 
-//Direction flag is moving in
-int dir = -1;
+
+
+
+
 
 /*Initialize servo pins and values*/
 int servo_pin_1 = 9;
@@ -42,12 +45,12 @@ int force_1 = 0;
 int force_2 = 0;
 String serialMsg;
 
+
 /* Function Definitions */
 void print1IRval( int val );
 float strToFloat( String string);
 int strToInt(String string);
 boolean getForce( String string, int * num1 );
-
 
 
 void setup() 
@@ -80,7 +83,7 @@ void loop()
 	
 	//send the IR value in voltage to the remote robot
 	//this is used to figure out the finger position
-	//print1IRval(IR_val_1*IR_res);
+	//print1IRval(IR_val_1*IR_RES);
 	print1IRval(IR_val_1[0]);
 	print1IRval(IR_val_1[1]);
 	print1IRval(IR_val_1[2]);
