@@ -10,7 +10,7 @@ const int MIN_FLAG_DISP = 10;	//Min dist flag has to move in either direction to
 const int MIN_SERVO_DISP = 20;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS = 50;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
-const int LOOP_DELAY = 2000;	//ms
+const int LOOP_DELAY = 100;	//ms
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -41,7 +41,7 @@ void print1IRval( int val );
 float strToFloat( String string);
 int strToInt(String string);
 boolean getForce( String string, int * num1 );
-
+int average ( int values[] );
 
 void setup() 
 { 
@@ -66,21 +66,27 @@ void loop()
 	//IR_val_1_prev = IR_val_1[0];
 	//IR_val_2_prev = IR_val_2[0];
 
-	/* Read a sequence of IR readings to filter out some noise */
+	/* Read a sequence of IR readings, average to filter out some noise */
 	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
 	{
 		IR_val_1[ i ] = analogRead( IR_PIN_1 );
 		IR_val_2[ i ] = analogRead( IR_PIN_2 );
 		delay( 50 );
-	}	
+	}
+
+	IR_val_1[ 0 ] = average( IR_val_1 );
 	
+	/*
 	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
 	{
 		print1IRval(IR_val_1[ i ]);
 	}
 	Serial.println();
 	Serial.println();			
-	 
+	*/
+	
+	print1IRval(IR_val_1[ 0 ]);
+	
 	//print1IRval( IR_val_1 * IR_RES );	//send the IR value in voltage to the remote robot
 										//this is used to figure out the finger position
 									
@@ -204,4 +210,16 @@ boolean getForce( String string, int * num1 )
 	{
 		return false;
 	}
+}
+
+int average( int values[] )
+{
+	int sum = 0;
+	int num_values = sizeof( values ) / sizeof( int );
+	for( int i = 0 ; i < num_values ; i++ )
+	{
+		sum += values[ i ];
+	}
+	
+	return sum / num_values;
 }
