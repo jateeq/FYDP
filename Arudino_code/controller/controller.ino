@@ -10,7 +10,7 @@ const int MIN_FLAG_DISP = 10;	//Min dist flag has to move in either direction to
 const int MIN_SERVO_DISP = 20;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS = 50;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
-const int LOOP_DELAY = 100;	//ms
+const int LOOP_DELAY = 0;	//ms
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -25,6 +25,8 @@ Servo servo_obj_2;				//Servo 2
 int dir;						//Direction flag is moving in
 int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
 int IR_val_2[ NUM_IR_READINGS ] = { -1 };
+int IR_val_1_cur;
+int IR_val_2_cur;
 int IR_val_1_prev;
 int IR_val_2_prev;
 int servo_pos_1; 
@@ -59,33 +61,25 @@ void setup()
 	force_2 = -1;
 } 
 
-
+int prev = 0;
 void loop() 
 {
 	//Record previous IR vals so change in flag position can be found
-	//IR_val_1_prev = IR_val_1[0];
-	//IR_val_2_prev = IR_val_2[0];
-
+	IR_val_1_prev = IR_val_1_cur;
+	IR_val_2_prev = IR_val_1_cur;
+	
 	/* Read a sequence of IR readings, average to filter out some noise */
 	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
 	{
 		IR_val_1[ i ] = analogRead( IR_PIN_1 );
 		IR_val_2[ i ] = analogRead( IR_PIN_2 );
-		delay( 50 );
+		delay( 40 );
 	}
 
 	IR_val_1[ 0 ] = average( IR_val_1 );
 	
-	/*
-	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
-	{
-		print1IRval(IR_val_1[ i ]);
-	}
-	Serial.println();
-	Serial.println();			
-	*/
-	
-	print1IRval(IR_val_1[ 0 ]);
+	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
+	print1IRval( IR_val_1_cur );
 	
 	//print1IRval( IR_val_1 * IR_RES );	//send the IR value in voltage to the remote robot
 										//this is used to figure out the finger position
@@ -94,12 +88,12 @@ void loop()
 		Note that the sensor value decreases the farther it is from the 
 		sensor
 	*/
-	/*if ( ( IR_val_1 - IR_val_1_prev ) > MIN_FLAG_DISP )
+	if ( ( IR_val_1_cur - IR_val_1_prev ) > MIN_FLAG_DISP )
 	{
 		//flag is moving towards IR sensor (finger moving up)		
 		dir = 0;
 	}
-	else if ( ( IR_val_1 - IR_val_1_prev ) < ( -MIN_FLAG_DISP ) )
+	else if ( ( IR_val_1_cur - IR_val_1_prev ) < ( -MIN_FLAG_DISP ) )
 	{
 		//flag is moving away from IR sensor (finger moving down)
 		dir = 1;
@@ -107,7 +101,7 @@ void loop()
 	else
 	{
 		dir = -1;
-	}*/
+	}
 	
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
@@ -222,4 +216,19 @@ int average( int values[] )
 	}
 	
 	return sum / num_values;
+}
+
+int smooth(int data, float filterVal, float smoothedVal){
+
+
+  if (filterVal > 1){      // check to make sure param's are within range
+    filterVal = .99;
+  }
+  else if (filterVal <= 0){
+    filterVal = 0;
+  }
+
+  smoothedVal = (data * (1 - filterVal)) + (smoothedVal  *  filterVal);
+
+  return (int)smoothedVal;
 }
