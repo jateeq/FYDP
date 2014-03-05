@@ -6,11 +6,11 @@
 
 
 /* Constants */
-const int MIN_FLAG_DISP = 10;	//Min dist flag has to move in either direction to move servo
-const int MIN_SERVO_DISP = 20;	//Servo will move this many degrees every time actuated
+const int MIN_FLAG_DISP = 5;	//Min dist flag has to move in either direction to move servo
+const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS = 50;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
-const int LOOP_DELAY = 0;	//ms
+const int LOOP_DELAY = 100;	//ms
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -61,7 +61,7 @@ void setup()
 	force_2 = -1;
 } 
 
-int prev = 0;
+
 void loop() 
 {
 	//Record previous IR vals so change in flag position can be found
@@ -73,13 +73,12 @@ void loop()
 	{
 		IR_val_1[ i ] = analogRead( IR_PIN_1 );
 		IR_val_2[ i ] = analogRead( IR_PIN_2 );
-		delay( 40 );
 	}
 
 	IR_val_1[ 0 ] = average( IR_val_1 );
 	
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
-	print1IRval( IR_val_1_cur );
+	//print1IRval( IR_val_1_cur );
 	
 	//print1IRval( IR_val_1 * IR_RES );	//send the IR value in voltage to the remote robot
 										//this is used to figure out the finger position
@@ -93,7 +92,7 @@ void loop()
 		//flag is moving towards IR sensor (finger moving up)		
 		dir = 0;
 	}
-	else if ( ( IR_val_1_cur - IR_val_1_prev ) < ( -MIN_FLAG_DISP ) )
+	else if ( ( IR_val_1_cur - IR_val_1_prev ) < ( - MIN_FLAG_DISP ) )
 	{
 		//flag is moving away from IR sensor (finger moving down)
 		dir = 1;
@@ -123,34 +122,34 @@ void loop()
 		//}
 		//else if ( force_1 == 0 )
 		//{
-		/*
-			if (dir == 1)
+		
+			if ( dir == 1 )
 			{
-				servo_pos_1 += MIN_SERVO_DISP;
+				if( servo_pos_1 < MAX_SERVO_POS )
+				{
+					servo_pos_1 += MIN_SERVO_DISP;
+				}
 			}
-			else if (dir == 0)
+			else if ( dir == 0 )
 			{
-				servo_pos_1 -= MIN_SERVO_DISP;
+				if( servo_pos_1 > MIN_SERVO_POS )
+				{
+					servo_pos_1 -= MIN_SERVO_DISP;
+				}
 			}
-			
-			if ( servo_pos_1 < MIN_SERVO_POS )
-			{
-				servo_pos_1 = MIN_SERVO_POS;
-			}
-			else if ( servo_pos_1 > MAX_SERVO_POS )
-			{
-				servo_pos_1 = MAX_SERVO_POS;
-			}
-			*/
-			// scale it to use it with the servo (value between 0 and 180)
-			//servo_pos_1 = map(IR_val_1, 0, 1023, 0, 179);
 			
 			// sets the servo position according to the scaled value 
 			servo_obj_1.write(servo_pos_1); 
 		//}
 	//}   
 	//print1IRval(servo_pos_1);
-        
+    
+	Serial.print('i');
+	Serial.print(IR_val_1_cur, DEC);
+	Serial.println('e');
+	Serial.print(servo_pos_1, DEC);
+	Serial.print('/');
+	
 	delay( LOOP_DELAY ); // waits for the servo to get there
 }
 
