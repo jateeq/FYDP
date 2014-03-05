@@ -20,9 +20,9 @@ const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
 
 /* House Keeping */
-Servo servo_obj_1;	//Servo 1 
-Servo servo_obj_2;	//Servo 2
-int dir;			//Direction flag is moving in
+Servo servo_obj_1;				//Servo 1 
+Servo servo_obj_2;				//Servo 2
+int dir;						//Direction flag is moving in
 int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
 int IR_val_2[ NUM_IR_READINGS ] = { -1 };
 int IR_val_1_prev;
@@ -34,6 +34,7 @@ int servo_pos_2_prev;
 int force_1;
 int force_2;
 String serialMsg;
+
 
 /* Function Definitions */
 void print1IRval( int val );
@@ -65,27 +66,28 @@ void loop()
 	//IR_val_1_prev = IR_val_1[0];
 	//IR_val_2_prev = IR_val_2[0];
 
-	/* read the IR sensor and convert to voltage*/
-	for (int i = 0 ; i<NUM_IR_READINGS ; i++)
+	/* Read a sequence of IR readings to filter out some noise */
+	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
 	{
-		IR_val_1[i] = analogRead(IR_PIN_1);
-		IR_val_2[i] = analogRead(IR_PIN_2);
-		delay(50);
+		IR_val_1[ i ] = analogRead( IR_PIN_1 );
+		IR_val_2[ i ] = analogRead( IR_PIN_2 );
+		delay( 50 );
 	}	
 	
-	//send the IR value in voltage to the remote robot
-	//this is used to figure out the finger position
-	//print1IRval(IR_val_1*IR_RES);
-	print1IRval(IR_val_1[0]);
-	print1IRval(IR_val_1[1]);
-	print1IRval(IR_val_1[2]);
-	print1IRval(IR_val_1[3]);
-	print1IRval(IR_val_1[4]);
+	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
+	{
+		print1IRval(IR_val_1[ i ]);
+	}
 	Serial.println();
-	Serial.println();
-	/* Find out direction of flag movement 
+	Serial.println();			
+	 
+	//print1IRval( IR_val_1 * IR_RES );	//send the IR value in voltage to the remote robot
+										//this is used to figure out the finger position
+									
+	/* 	Find out direction of flag movement 
 		Note that the sensor value decreases the farther it is from the 
-		sensor*/
+		sensor
+	*/
 	/*if ( ( IR_val_1 - IR_val_1_prev ) > MIN_FLAG_DISP )
 	{
 		//flag is moving towards IR sensor (finger moving up)		
