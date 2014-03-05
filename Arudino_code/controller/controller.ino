@@ -1,5 +1,5 @@
 /*
-	Authors: Jawad Ateeq, Jake Park
+	Authors: Jawad Ateeq
 */
 
 #include <Servo.h>
@@ -22,26 +22,18 @@ const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
 /* House Keeping */
 Servo servo_obj_1;	//Servo 1 
 Servo servo_obj_2;	//Servo 2
-int dir = -1;		//Direction flag is moving in
-
-
-/*Initialize IR pins and values. There are 2 IR sensors being used - 
-sensor 1 relates to the index finger, sensor */
+int dir;			//Direction flag is moving in
 int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
 int IR_val_2[ NUM_IR_READINGS ] = { -1 };
-int IR_val_1_prev = -1;
-int IR_val_2_prev = -1;
-
-
-/*Initialize servo pins and values*/
-int servo_pos_1 = 0; 
-int servo_pos_2 = 0;
-int servo_pos_1_prev = 0;
-int servo_pos_2_prev = 0;
-int force_1 = 0;
-int force_2 = 0;
+int IR_val_1_prev;
+int IR_val_2_prev;
+int servo_pos_1; 
+int servo_pos_2;
+int servo_pos_1_prev;
+int servo_pos_2_prev;
+int force_1;
+int force_2;
 String serialMsg;
-
 
 /* Function Definitions */
 void print1IRval( int val );
@@ -56,13 +48,16 @@ void setup()
 	servo_obj_1.attach( SERVO_PIN_1 );  
 	servo_obj_2.attach( SERVO_PIN_2 );
 
-	Serial.begin( BAUD_RATE );
-	
-	//starting position of servos is 
+	Serial.begin( BAUD_RATE );		
+	 
+	/* Initialize values */
 	servo_pos_1 = MIN_SERVO_POS;
+	servo_pos_2 = MIN_SERVO_POS;
+	dir = -1;
+	force_1 = -1;
+	force_2 = -1;
 } 
 
-//int x = 20;
 
 void loop() 
 {
@@ -199,9 +194,7 @@ boolean getForce( String string, int * num1 )
 	}
 
 	if (index1 < index2 && index1 != -1 && index2 != -1)
-	{
-		// String string1 = string.substring( index1+1, index2-1 );
-		//*num1 = strToInt( string1 );
+	{		
 		*num1 = (string[index1+1]-'0');
 		return true;
 	} 
