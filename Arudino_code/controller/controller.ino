@@ -80,7 +80,7 @@ void loop()
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
 	//print1IRval( IR_val_1_cur );
 	
-	print1IRval( IR_val_1_cur * IR_RES );	//send the IR value in voltage to the remote robot
+	print1IRval_voltage( (float) IR_val_1_cur * IR_RES );	//send the IR value in voltage to the remote robot
 											//this is used to figure out the finger position
 									
 	/* 	Find out direction of flag movement 
@@ -154,6 +154,13 @@ void loop()
 }
 
 void print1IRval( int val )
+{
+	Serial.print('i');
+	Serial.print(val, DEC);
+	Serial.println('e');
+}
+
+void print1IRval_voltage( float val )
 {
 	Serial.print('i');
 	Serial.print(val, DEC);
