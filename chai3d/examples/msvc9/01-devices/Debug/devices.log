@@ -1,0 +1,32 @@
+﻿Build started 2/22/2014 12:12:04 AM.
+     1>Project "C:\Users\Jake\Desktop\chai3d\examples\msvc9\01-devices\devices.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\01 - devices.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I../../../src /I../../../external/OpenGL/msvc /ZI /nologo /W3 /WX- /Od /Oy- /D _WIN32 /D _MSVC /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt "src\01-devices.cpp"
+         01-devices.cpp
+       ManifestResourceCompile:
+         All outputs are up-to-date.
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(990,5): warning MSB8012: TargetPath(C:\Users\Jake\Desktop\chai3d\examples\msvc9\01-devices\Debug\01 - devices.exe) does not match the Linker's OutputFile property value (C:\Users\Jake\Desktop\chai3d\bin\01-devices.exe). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(992,5): warning MSB8012: TargetName(01 - devices) does not match the Linker's OutputFile property value (01-devices). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"../../../bin/01-devices.exe" /INCREMENTAL /NOLOGO /LIBPATH:../../../lib/msvc9 /LIBPATH:../../../external/OpenGL/msvc winmm.lib opengl32.lib "chai3d-debug.lib" glu32.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\01 - devices.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Debug\devices.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"Debug\01 - devices.lib" /MACHINE:X86 "Debug\01 - devices.exe.embed.manifest.res"
+         Debug\Serial.obj
+         "Debug\01-devices.obj"
+         Debug\stdafx.obj
+         "C:\Users\Jake\Desktop\chai3d\lib\msvc9\chai3d-debug.lib"
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\01 - devices.exe.embed.manifest" /manifest "Debug\01 - devices.exe.intermediate.manifest"
+         All outputs are up-to-date.
+       LinkEmbedManifest:
+         All outputs are up-to-date.
+         devices.vcxproj -> C:\Users\Jake\Desktop\chai3d\examples\msvc9\01-devices\Debug\01 - devices.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\01 - devices.unsuccessfulbuild".
+         Touching "Debug\01 - devices.lastbuildstate".
+     1>Done Building Project "C:\Users\Jake\Desktop\chai3d\examples\msvc9\01-devices\devices.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.33
