@@ -39,6 +39,7 @@ class Serial
 		//Convert char data to int
 		int convert_to_int(char *data, int ind_start, int ind_end);
 		//Search String for number data
+		bool parse_num(char *data, double &num1);
 		bool parse_num(char *data, double &num1, double &num2);
 };
 

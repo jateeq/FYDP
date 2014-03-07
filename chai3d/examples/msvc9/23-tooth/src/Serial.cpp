@@ -153,6 +153,52 @@ int Serial::convert_to_int(char *data, int ind_start, int ind_end)
   return number;
 }
 
+bool Serial::parse_num(char *data, double &num1)
+{
+	int i_ind = -1;
+	int e_ind = -1;
+	int index = 0;
+	int change = 0;
+
+	//Store indices for decoding the char array later
+	while (data[index] != NULL)
+	{
+		if (data[index] == 'i')
+		{
+			i_ind  = index;
+		}else if (data[index] == 'e')
+		{
+			e_ind = index;
+		}
+
+		if ((i_ind < e_ind) && i_ind != -1 && e_ind != -1)
+		{
+			break;
+		}
+
+		index++;
+	}
+
+  	if (i_ind < e_ind)
+	{
+		char serialData[50];
+		index = 0;
+		for (int i = i_ind+1; i < e_ind; i++)
+		{
+			serialData[index] = data[i];
+			index++;
+		}
+		serialData[++index] = '\0';
+
+		num1 = atof(serialData);
+
+		return true;
+	} else 
+	{
+		return false;
+	}
+}
+
 bool Serial::parse_num(char *data, double &num1, double &num2)
 {
 	int i_ind = -1;

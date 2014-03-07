@@ -818,13 +818,14 @@ void updateHaptics(void)
 	   
 		if (sp->ReadData(serialData, strlen(serialData)) > 0)
 		{
-			if (sp->parse_num(serialData, pos1, pos2))
+			if (sp->parse_num(serialData, pos1))
 			{
-				Sleep(30);
+				Sleep(50);
 				if (pos1 > 0.3)
 				{
  					pos1 = 0.126*pow(pos1,-1.07);
-					pos1 = (pos1 + pos1_1 + pos1_2 + pos1_3 + pos1_4)/5;
+					pos1 = (pos1+pos1_1+pos1_2)/3;
+					//pos1 = (pos1 + pos1_1 + pos1_2 + pos1_3 + pos1_4)/5;
 					pos1_5 = pos1_4;
 					pos1_4 = pos1_3;
 					pos1_3 = pos1_2;
@@ -862,7 +863,7 @@ void updateHaptics(void)
 
 			if (abs(dx1) < 0.1)
 			{
-				overall_pos1 -= dx1;
+				overall_pos1 -= dx1*10;
 				if (overall_pos1 < -0.1)
 				{
 					overall_pos1 = -0.1;
