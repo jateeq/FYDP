@@ -1,0 +1,35 @@
+﻿Build started 15/02/2014 1:13:19 PM.
+     1>Project "C:\Users\Jake\Desktop\chai3d\examples\msvc9\42-ODE-mesh\ode-mesh.vcxproj" on node 3 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\42 - ODE-mesh.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I../../../src /I../../../modules/ODE /I../../../external/ODE/include /I../../../external/OpenGL/msvc /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MSVC /D WINVER=0X0500 /D dDOUBLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Yc"StdAfx.h" /Fp"Debug\42 - ODE-mesh.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I../../../src /I../../../modules/ODE /I../../../external/ODE/include /I../../../external/OpenGL/msvc /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MSVC /D WINVER=0X0500 /D dDOUBLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt "src\42-ODE-mesh.cpp"
+         42-ODE-mesh.cpp
+       ManifestResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\42 - ODE-mesh.exe.embed.manifest.res" "Debug\42 - ODE-mesh_manifest.rc" 
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(990,5): warning MSB8012: TargetPath(C:\Users\Jake\Desktop\chai3d\examples\msvc9\42-ODE-mesh\Debug\42 - ODE-mesh.exe) does not match the Linker's OutputFile property value (C:\Users\Jake\Desktop\chai3d\bin\42-ODE-mesh.exe). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(992,5): warning MSB8012: TargetName(42 - ODE-mesh) does not match the Linker's OutputFile property value (42-ODE-mesh). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"../../../bin/42-ODE-mesh.exe" /INCREMENTAL /NOLOGO /LIBPATH:../../../external/ODE/lib/msvc /LIBPATH:../../../lib/msvc9 /LIBPATH:../../../external/OpenGL/msvc winmm.lib opengl32.lib "chai3d-debug.lib" glu32.lib ode_double.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\42 - ODE-mesh.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Debug\ODE-mesh.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"Debug\42 - ODE-mesh.lib" /MACHINE:X86 "Debug\42 - ODE-mesh.exe.embed.manifest.res"
+         "Debug\42-ODE-mesh.obj"
+         Debug\stdafx.obj
+         "C:\Users\Jake\Desktop\chai3d\lib\msvc9\chai3d-debug.lib"
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\42 - ODE-mesh.exe.embed.manifest" /manifest "Debug\42 - ODE-mesh.exe.intermediate.manifest"
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\42 - ODE-mesh.exe.embed.manifest.res" "Debug\42 - ODE-mesh_manifest.rc" 
+       LinkEmbedManifest:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"../../../bin/42-ODE-mesh.exe" /INCREMENTAL /NOLOGO /LIBPATH:../../../external/ODE/lib/msvc /LIBPATH:../../../lib/msvc9 /LIBPATH:../../../external/OpenGL/msvc winmm.lib opengl32.lib "chai3d-debug.lib" glu32.lib ode_double.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\42 - ODE-mesh.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Debug\ODE-mesh.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"Debug\42 - ODE-mesh.lib" /MACHINE:X86 "Debug\42 - ODE-mesh.exe.embed.manifest.res"
+         "Debug\42-ODE-mesh.obj"
+         Debug\stdafx.obj
+         "C:\Users\Jake\Desktop\chai3d\lib\msvc9\chai3d-debug.lib"
+         ode-mesh.vcxproj -> C:\Users\Jake\Desktop\chai3d\examples\msvc9\42-ODE-mesh\Debug\42 - ODE-mesh.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\42 - ODE-mesh.unsuccessfulbuild".
+         Touching "Debug\42 - ODE-mesh.lastbuildstate".
+     1>Done Building Project "C:\Users\Jake\Desktop\chai3d\examples\msvc9\42-ODE-mesh\ode-mesh.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:09.97
