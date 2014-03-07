@@ -80,8 +80,8 @@ void loop()
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
 	//print1IRval( IR_val_1_cur );
 	
-	//print1IRval( IR_val_1 * IR_RES );	//send the IR value in voltage to the remote robot
-										//this is used to figure out the finger position
+	print1IRval( IR_val_1_cur * IR_RES );	//send the IR value in voltage to the remote robot
+											//this is used to figure out the finger position
 									
 	/* 	Find out direction of flag movement 
 		Note that the sensor value decreases the farther it is from the 
@@ -113,15 +113,15 @@ void loop()
 	//reset force from last time
 	force_1 = -1; 
 	
-	//if (getForce( serialMsg, &force_1 ))
-	//{
+	if (getForce( serialMsg, &force_1 ))
+	{
 		/* move servo if no object detected */
-		//if ( force_1  == 1 )
-		//{
+		if ( force_1  == 1 )
+		{
 			//hold previous position
-		//}
-		//else if ( force_1 == 0 )
-		//{
+		}
+		else if ( force_1 == 0 )
+		{
 		
 			if ( dir == 1 )
 			{
@@ -140,16 +140,16 @@ void loop()
 			
 			// sets the servo position according to the scaled value 
 			servo_obj_1.write(servo_pos_1); 
-		//}
-	//}   
+		}
+	}   
 	//print1IRval(servo_pos_1);
     
-	Serial.print('i');
+	/*Serial.print('i');
 	Serial.print(IR_val_1_cur, DEC);
 	Serial.println('e');
 	Serial.print(servo_pos_1, DEC);
 	Serial.print('/');
-	
+	*/
 	delay( LOOP_DELAY ); // waits for the servo to get there
 }
 
