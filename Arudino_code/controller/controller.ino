@@ -9,8 +9,7 @@
 const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS = 50;	//degrees
-const int MAX_SERVO_POS = 75;	//degrees
-const int LOOP_DELAY = 0;	//ms
+const int MAX_SERVO_POS = 100;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -18,6 +17,7 @@ const int IR_PIN_1 = 0;			//IR 1 connected to analog pin 1
 const int IR_PIN_2 = 1;			//IR 2 connected to analog pin 2
 const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
+const int LOOP_DELAY = 75;		//ms
 
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
