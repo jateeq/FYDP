@@ -108,6 +108,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\40-ODE-cubic.cpp" />
+    <ClCompile Include="src\Serial.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -117,6 +118,7 @@
     <ClInclude Include="..\..\..\external\Ode\src\CODE.h" />
     <ClInclude Include="..\..\..\external\Ode\src\CODEGenericBody.h" />
     <ClInclude Include="..\..\..\external\Ode\src\CODEWorld.h" />
+    <ClInclude Include="src\SerialClass.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

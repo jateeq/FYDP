@@ -29,6 +29,13 @@
 #include "CODE.h"
 //---------------------------------------------------------------------------
 
+//-----------------Jake--------------//
+#include "SerialClass.h"
+#include <iomanip>
+#include <sstream>
+#include <conio.h>
+#include <dos.h>
+
 //---------------------------------------------------------------------------
 // DECLARED CONSTANTS
 //---------------------------------------------------------------------------
@@ -41,6 +48,21 @@ const int WINDOW_SIZE_H         = 512;
 const int OPTION_FULLSCREEN     = 1;
 const int OPTION_WINDOWDISPLAY  = 2;
 
+cVector3d previous_pos(0,0,0);
+cVector3d dpos(0,0,0);
+cVector3d previous_object_pos(0,0,0);
+
+//-----------------Jake--------------//
+cGeneric3dofPointer* thumb;
+cGeneric3dofPointer* index_finger;
+cLabel* labels[3];
+cGenericObject* rootLabels;
+Serial* sp;
+double previous_pos1, previous_pos2;
+double overall_pos1, overall_pos2 = 0;
+double pos1_1, pos1_2, pos1_3, pos1_4, pos1_5 = 0;
+double pos2_1, pos2_2, pos2_3, pos2_4, pos2_5 = 2;
+int pos_counter = 0;
 
 //---------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -180,6 +202,9 @@ int main(int argc, char* argv[])
     // parse first arg to try and locate resources
     resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
 
+	sp = new Serial("COM6");
+	if (sp->IsConnected())
+		printf("We're connected");
 
     //-----------------------------------------------------------------------
     // 3D - SCENEGRAPH
@@ -274,7 +299,14 @@ int main(int argc, char* argv[])
 
     // create a 3D tool and add it to the world
     tool = new cGeneric3dofPointer(world);
+
+	//-----------------Jake--------------//
+	index_finger = new cGeneric3dofPointer(world);
+	thumb = new cGeneric3dofPointer(world);
+
     world->addChild(tool);
+	world->addChild(index_finger);
+	world->addChild(thumb);
 
     // connect the haptic device to the tool
     tool->setHapticDevice(hapticDevice);
@@ -283,26 +315,41 @@ int main(int argc, char* argv[])
     tool->start();
 
     // map the physical workspace of the haptic device to a larger virtual workspace.
-    tool->setWorkspaceRadius(1.3);
+    tool->setWorkspaceRadius(1.0);
+	index_finger->setWorkspaceRadius(1.0);
+	thumb->setWorkspaceRadius(1.0);
 
     // define a radius for the tool (graphical display)
-    tool->setRadius(0.05);
+    tool->setRadius(0.01);
+	index_finger->setRadius(0.01);
+	thumb->setRadius(0.01);
 
     // hide the device sphere. only show proxy.
     tool->m_deviceSphere->setShowEnabled(false);
+	index_finger->setShowEnabled(false);
+	thumb->setShowEnabled(false);
 
     // set the physical readius of the proxy.
-    proxyRadius = 0.05;
+    proxyRadius = 0.03;
     tool->m_proxyPointForceModel->setProxyRadius(proxyRadius);
+	index_finger->m_proxyPointForceModel->setProxyRadius(proxyRadius);
+	thumb->m_proxyPointForceModel->setProxyRadius(proxyRadius);
+
     tool->m_proxyPointForceModel->m_collisionSettings.m_checkBothSidesOfTriangles = false;
+	index_finger->m_proxyPointForceModel->m_collisionSettings.m_checkBothSidesOfTriangles = false;
+	thumb->m_proxyPointForceModel->m_collisionSettings.m_checkBothSidesOfTriangles = false;
 
     // enable if objects in the scene are going to rotate of translate
     // or possibly collide against the tool. If the environment
     // is entirely static, you can set this parameter to "false"
     tool->m_proxyPointForceModel->m_useDynamicProxy = true;
+	index_finger->m_proxyPointForceModel->m_useDynamicProxy = true;
+	thumb->m_proxyPointForceModel->m_useDynamicProxy = true;
 
     // ajust the color of the tool
     tool->m_materialProxy = tool->m_materialProxyButtonPressed;
+	index_finger->m_materialProxy = index_finger->m_materialProxyButtonPressed;
+	thumb->m_materialProxy = thumb->m_materialProxyButtonPressed;
 
     // read the scale factor between the physical workspace of the haptic
     // device and the virtual workspace defined for the tool
@@ -498,6 +545,37 @@ int main(int argc, char* argv[])
     ground->setTransparencyLevel(0.7);
     ground->setUseTransparency(true);
 
+	//----Jake-----//
+
+	string strID;
+    cStr(strID, 0);
+    string strDevice = "#" + strID + " - " +info.m_modelName;
+
+	cLabel* newLabel = new cLabel();
+	tool->m_proxyMesh->addChild(newLabel);
+	newLabel->m_string = strDevice;
+	newLabel->setPos(0.00, 0.05, 0.00);
+	newLabel->m_fontColor.set(1.0, 1.0, 1.0);
+
+	string strID1;
+    cStr(strID1, 1);
+    string strDevice1 = "#" + strID1 + " - index finger";
+
+	cLabel* newLabel1 = new cLabel();
+	index_finger->m_proxyMesh->addChild(newLabel1);
+	newLabel1->m_string = strDevice1;
+	newLabel1->setPos(0.00, 0.05, 0.00);
+	newLabel1->m_fontColor.set(1.0, 1.0, 1.0);
+
+	string strID2;
+    cStr(strID2, 2);
+    string strDevice2 = "#" + strID2 + " - thumb";
+
+	cLabel* newLabel2 = new cLabel();
+	thumb->m_proxyMesh->addChild(newLabel2);
+	newLabel2->m_string = strDevice2;
+	newLabel2->setPos(0.00, 0.05, 0.00);
+	newLabel2->m_fontColor.set(1.0, 1.0, 1.0);
 
     //-----------------------------------------------------------------------
     // OPEN GL - WINDOW DISPLAY
@@ -651,7 +729,7 @@ void updateHaptics(void)
     // simulation clock
     cPrecisionClock simClock;
     simClock.start(true);
-
+	int i = 0;
     // main haptic simulation loop
     while(simulationRunning)
     {
@@ -665,10 +743,161 @@ void updateHaptics(void)
         tool->computeInteractionForces();
 
         // check if the tool is touching an object
-        cGenericObject* object = tool->m_proxyPointForceModel->m_contactPoint0->m_object;
-
+		cGenericObject* object_tool = tool->m_proxyPointForceModel->m_contactPoint0->m_object;
+        cGenericObject* object_index_finger = index_finger->m_proxyPointForceModel->m_contactPoint0->m_object;
+		cGenericObject* object_thumb = thumb->m_proxyPointForceModel->m_contactPoint0->m_object;
+		
         // read user switch status
-        bool userSwitch = tool->getUserSwitch(0);
+        bool userSwitch;
+
+        cVector3d pos = tool->m_proxyPointForceModel->getProxyGlobalPosition();
+        cMatrix3d rot = tool->m_deviceGlobalRot;
+
+		//-----------------Jake--------------//
+
+		char serialData[50];
+		double pos1 = 0;
+		double pos2 = 0;
+	   
+		if (sp->ReadData(serialData, strlen(serialData)) > 0)
+		{
+			if (sp->parse_num(serialData, pos1))
+			{
+				Sleep(50);
+				if (pos1 > 0.3)
+				{
+ 					pos1 = 0.126*pow(pos1,-1.07);
+					pos1 = (pos1+pos1_1+pos1_2)/3;
+					//pos1 = (pos1 + pos1_1 + pos1_2 + pos1_3 + pos1_4)/5;
+					pos1_5 = pos1_4;
+					pos1_4 = pos1_3;
+					pos1_3 = pos1_2;
+					pos1_2 = pos1_1;
+					pos1_1 = pos1;
+
+ 					pos2 = 0.126*pow(pos2,-1.07);
+					pos2 = (pos2 + pos2_1 + pos2_2 + pos2_3 + pos2_4)/5;
+					pos2_5 = pos2_4;
+					pos2_4 = pos2_3;
+					pos2_3 = pos2_2;
+					pos2_2 = pos2_1;
+					pos2_1 = pos2;
+				}
+				else 
+				{
+					pos1 = previous_pos1;
+					pos2 = previous_pos2;
+				}
+
+				printf("Received data %f and %f \n", pos1, pos2);
+			} else 
+			{
+				printf("Conversion failed\n");
+			}
+			
+		} else {
+			printf("Receive failed\n");
+		}
+
+		if (pos_counter > 2)
+		{
+			double dx1 = pos1 - previous_pos1;
+			double dx2 = pos2 - previous_pos2;
+
+			if (abs(dx1) < 0.1)
+			{
+				overall_pos1 -= dx1*10;
+				if (overall_pos1 < -0.1)
+				{
+					overall_pos1 = -0.1;
+				} else if(overall_pos1 > 0)
+				{
+					overall_pos1 = 0;
+				}
+			}
+
+			if (abs(dx2) < 0.1)
+			{
+				overall_pos2 -= dx2;
+				if (overall_pos2 < -0.1)
+				{
+					overall_pos2 = -0.1;
+				} else if(overall_pos2 > 0)
+				{
+					overall_pos2 = 0;
+				}
+			}
+		} else {
+			pos_counter++;
+		}
+
+		previous_pos1 = pos1;
+		previous_pos2 = pos2;
+
+		index_finger->setPos(pos.x - 0.15, pos.y, pos.z + 0.15 + overall_pos1);
+		index_finger->setRot(rot);
+
+		index_finger->computeInteractionForces();
+
+		index_finger->updatePose();
+
+		thumb->setPos(pos.x + 0.1, pos.y - 0.15 + overall_pos2, pos.z - 0.05);
+		thumb->setRot(rot);
+
+		thumb->computeInteractionForces();
+
+		thumb->updatePose();
+
+        // compute global reference frames for each object
+        world->computeGlobalPositions(true);
+
+		double torque_temp1 = sqrt(pow(index_finger->m_lastComputedGlobalForce.x,2) + pow(index_finger->m_lastComputedGlobalForce.y,2) + pow(index_finger->m_lastComputedGlobalForce.z,2));
+		double torque_temp2 = sqrt(pow(thumb->m_lastComputedGlobalForce.x,2) + pow(thumb->m_lastComputedGlobalForce.y,2) + pow(thumb->m_lastComputedGlobalForce.z,2));
+
+		/*torque_str_tmp << std::setprecision(2) << torque_temp;
+
+		const std::string& torque_to_send = torque_str_tmp.str();
+
+		char to_send[50];
+		strcpy(to_send, "T");
+		strcat(to_send, torque_to_send.c_str());
+		strcat(to_send, ";");
+		*/
+
+		char to_send[50];
+		if (torque_temp1 > 0 && torque_temp2 > 0)
+		{
+			strcpy(to_send, "T");
+			strcat(to_send, "1/1");
+			strcat(to_send, ";");
+			userSwitch = true;
+		} else if (torque_temp1 == 0 && torque_temp2 > 0)
+		{
+			strcpy(to_send, "T");
+			strcat(to_send, "0/1");
+			strcat(to_send, ";");
+			userSwitch = false;
+		} else if (torque_temp1 > 0 && torque_temp2 == 0)
+		{
+			strcpy(to_send, "T");
+			strcat(to_send, "1/0");
+			strcat(to_send, ";");
+			userSwitch = false;
+		} else 
+		{
+			strcpy(to_send, "T");
+			strcat(to_send, "0/0");
+			strcat(to_send, ";");
+			userSwitch = false;
+		}
+
+		if (sp->WriteData(to_send, strlen(to_send)))
+		{
+			printf("Sent %s\n", to_send);
+		} else 
+		{
+			printf("Force data %s could not be sent\n", to_send);
+		}
 
         // if the tool is currently grasping an object we simply update the interaction grasp force
         // between the tool and the object (modeled by a virtual spring)
@@ -682,24 +911,56 @@ void updateHaptics(void)
             cVector3d globalGraspPos = globalGraspObjectPos + cMul(globalGraspObjectRot, graspPos);
 
             // retrieve the position of the tool in global coordinates
-            cVector3d globalToolPos  = tool->getProxyGlobalPos();
+            cVector3d globalToolPos  = index_finger->getProxyGlobalPos();
 
             // compute the offset between the tool and grasp point on the object
-            cVector3d offset = globalToolPos - globalGraspPos;
-
+            cVector3d offset = (globalToolPos - globalGraspObjectPos)*0.1;
             // model a spring between both points
             double STIFFNESS = 4;
-            cVector3d force = STIFFNESS * offset;
+			double damper = 1000;
 
-            // apply attraction force (grasp) onto object
-            graspObject->addGlobalForceAtGlobalPos(force, globalGraspPos);
+            cVector3d force; //STIFFNESS * dpos;
+			//if (i == 10)
+			//{
+				if (previous_object_pos.x != 0 && previous_object_pos.y != 0 && previous_object_pos.z != 0)
+				{
+					force.x = -STIFFNESS*(globalGraspPos.x-(globalToolPos.x))-damper*(globalGraspPos.x-previous_object_pos.x);
+					force.y = -STIFFNESS*(globalGraspPos.y-(globalToolPos.y))-damper*(globalGraspPos.y-previous_object_pos.y);
+					force.z = -STIFFNESS*(globalGraspPos.z-(globalToolPos.z))-damper*(globalGraspPos.z-previous_object_pos.z);
+					
+					if (force.x > 10)
+						force.x = 10;
+					else if (force.x < -10)
+						force.x = -10;
 
+					if (force.y > 10)
+						force.y = 10;
+					else if (force.y < -10)
+						force.y = -10;
+
+					if (force.z > 10)
+						force.z = 10;
+					else if (force.z < -10)
+						force.z = -10;
+
+					force.z += 9.81*graspObject->getMass();
+					// apply attraction force (grasp) onto object
+					graspObject->addGlobalForceAtGlobalPos(force, globalGraspObjectPos);
+				}
+									previous_object_pos = globalGraspPos;
+
+			//printf("Force: %f, %f, %f", graspObject->m_lastComputedGlobalForce);
             // scale magnitude and apply opposite force to haptic device
-            tool->m_lastComputedGlobalForce.add(cMul(-1.0, force));
+           // tool->m_lastComputedGlobalForce.add(cMul(-1.0, force));
 
+		//	graspObject->setPosition(globalToolPos);
+
+			//  graspObject->addGlobalForceAtGlobalPos(force, globalToolPos);
             // update both end points of the line which is used for display purposes only
             graspLine->m_pointA = globalGraspPos;
             graspLine->m_pointB = globalToolPos;
+			//}
+
         }
 
         // the user is not or no longer currently grasping the object
@@ -722,24 +983,44 @@ void updateHaptics(void)
             }
 
             // the user is touching an object
-            if (object != NULL)
+            if (object_tool != NULL)
             {
                 // check if object is attached to an external ODE parent
-                cGenericType* externalParent = object->getExternalParent();
+                cGenericType* externalParent = object_tool->getExternalParent();
                 cODEGenericBody* ODEobject = dynamic_cast<cODEGenericBody*>(externalParent);
                 if (ODEobject != NULL)
                 {
                     // get position of tool
                     cVector3d pos = tool->m_proxyPointForceModel->m_contactPoint0->m_globalPos;
 
-                    // check if user has enabled the user switch to gras the object
+                    // retrieve the haptic interaction force being applied to the tool
+                    cVector3d force = tool->m_lastComputedGlobalForce;
+
+                    // apply haptic force to ODE object
+                    cVector3d tmpfrc = cNegate(force);
+                    ODEobject->addGlobalForceAtGlobalPos(tmpfrc, pos);
+                }
+            }
+
+            // the user is touching an object
+            if (object_index_finger != NULL && object_thumb != NULL)
+            {
+                // check if object is attached to an external ODE parent
+                cGenericType* externalParent = object_index_finger->getExternalParent();
+                cODEGenericBody* ODEobject = dynamic_cast<cODEGenericBody*>(externalParent);
+                if (ODEobject != NULL)
+                {
+                    // get position of tool
+                    cVector3d pos = index_finger->m_proxyPointForceModel->m_contactPoint0->m_globalPos;
+
+			        // check if user has enabled the user switch to gras the object
                     if (userSwitch)
                     {
                         // a new object is being grasped
                         graspObject = ODEobject;
 
                         // retrieve the grasp position on the object in local coordinates
-                        graspPos    = tool->m_proxyPointForceModel->m_contactPoint0->m_localPos;
+                        graspPos = (index_finger->m_proxyPointForceModel->m_contactPoint0->m_localPos + thumb->m_proxyPointForceModel->m_contactPoint0->m_localPos)/2;
 
                         // grasp in now active!
                         graspActive = true;
@@ -753,13 +1034,57 @@ void updateHaptics(void)
                     }
 
                     // retrieve the haptic interaction force being applied to the tool
-                    cVector3d force = tool->m_lastComputedGlobalForce;
+                    cVector3d force = index_finger->m_lastComputedGlobalForce;
+
+                    // apply haptic force to ODE object
+                    cVector3d tmpfrc = cNegate(force);
+                    ODEobject->addGlobalForceAtGlobalPos(tmpfrc, pos);
+
+					force = thumb->m_lastComputedGlobalForce;
+					
+					pos = thumb->m_proxyPointForceModel->m_contactPoint0->m_globalPos;
+
+					// apply haptic force to ODE object
+                    tmpfrc = cNegate(force);
+                    ODEobject->addGlobalForceAtGlobalPos(tmpfrc, pos);
+                }
+            } else if ( object_index_finger != NULL)
+			{
+                // check if object is attached to an external ODE parent
+                cGenericType* externalParent = object_index_finger->getExternalParent();
+                cODEGenericBody* ODEobject = dynamic_cast<cODEGenericBody*>(externalParent);
+                if (ODEobject != NULL)
+                {
+                    // get position of tool
+                    cVector3d pos = index_finger->m_proxyPointForceModel->m_contactPoint0->m_globalPos;
+
+                    // retrieve the haptic interaction force being applied to the tool
+                    cVector3d force = index_finger->m_lastComputedGlobalForce;
 
                     // apply haptic force to ODE object
                     cVector3d tmpfrc = cNegate(force);
                     ODEobject->addGlobalForceAtGlobalPos(tmpfrc, pos);
                 }
-            }
+			}
+			else if (object_thumb != NULL)
+			{
+                // check if object is attached to an external ODE parent
+                cGenericType* externalParent = object_thumb->getExternalParent();
+                cODEGenericBody* ODEobject = dynamic_cast<cODEGenericBody*>(externalParent);
+                if (ODEobject != NULL)
+                {
+                    // get position of tool
+                    cVector3d pos = thumb->m_proxyPointForceModel->m_contactPoint0->m_globalPos;
+
+                    // retrieve the haptic interaction force being applied to the tool
+                    cVector3d force = thumb->m_lastComputedGlobalForce;
+
+                    // apply haptic force to ODE object
+                    cVector3d tmpfrc = cNegate(force);
+                    ODEobject->addGlobalForceAtGlobalPos(tmpfrc, pos);
+                }
+			}
+
         }
 
         // send forces to device
@@ -775,6 +1100,22 @@ void updateHaptics(void)
 
         // update simulation
         ODEWorld->updateDynamics(nextSimInterval);
+		
+		dpos.x = (tool->getProxyGlobalPos().x - previous_pos.x);
+		dpos.y = (tool->getProxyGlobalPos().y - previous_pos.y);
+		dpos.z = (tool->getProxyGlobalPos().z - previous_pos.z);
+
+		if ( i == 10 )
+		{
+		previous_pos.x =  tool->getProxyGlobalPos().x;
+ 		previous_pos.y =  tool->getProxyGlobalPos().y;
+		previous_pos.z =  tool->getProxyGlobalPos().z;
+		i = 0;
+		}
+		else 
+			i++;
+		
+
     }
 
     // exit haptics thread
