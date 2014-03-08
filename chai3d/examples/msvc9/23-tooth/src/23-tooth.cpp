@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
     world->addChild(camera);
 
     // position and oriente the camera
-    camera->set( cVector3d (3.0, 0.0, 0.0),    // camera position (eye)
+    camera->set( cVector3d (3.0, 0.0, 0.3),    // camera position (eye)
                  cVector3d (0.0, 0.0, 0.0),    // lookat position (target)
                  cVector3d (0.0, 0.0, 1.0));   // direction of the "up" vector
 
@@ -230,7 +230,9 @@ int main(int argc, char* argv[])
     light->setEnabled(true);                   // enable light source
     light->setPos(cVector3d( 2.0, 0.5, 1.0));  // position the light source
     light->setDir(cVector3d(-2.0, 0.5, 1.0));  // define the direction of the light beam
-
+    light->m_ambient.set(0.6, 0.6, 0.6);
+    light->m_diffuse.set(0.8, 0.8, 0.8);
+    light->m_specular.set(0.8, 0.8, 0.8);
 
     //-----------------------------------------------------------------------
     // 2D - WIDGETS
@@ -355,6 +357,8 @@ int main(int argc, char* argv[])
     // create a small label as title
     cLabel* titleLabel = new cLabel();
     rootLabels->addChild(titleLabel);
+
+	//-----Jake------//
 
     // define its position, color and string message
     titleLabel->setPos(300, 60, 0);
