@@ -6,10 +6,10 @@
 
 
 /* Constants */
-const int MIN_FLAG_DISP = 5;	//Min dist flag has to move in either direction to move servo
+const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS = 50;	//degrees
-const int MAX_SERVO_POS = 100;	//degrees
+const int MAX_SERVO_POS = 75;	//degrees
 const int LOOP_DELAY = 0;	//ms
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
