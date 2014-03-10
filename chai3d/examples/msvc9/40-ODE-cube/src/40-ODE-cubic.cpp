@@ -35,7 +35,8 @@
 #include <sstream>
 #include <conio.h>
 #include <dos.h>
-
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+#include <windows.h>
 //---------------------------------------------------------------------------
 // DECLARED CONSTANTS
 //---------------------------------------------------------------------------
@@ -60,9 +61,14 @@ cGenericObject* rootLabels;
 Serial* sp;
 double previous_pos1, previous_pos2;
 double overall_pos1, overall_pos2 = 0;
+double holding_pos1, holding_pos2 = 0;
 double pos1_1, pos1_2, pos1_3, pos1_4, pos1_5 = 0;
 double pos2_1, pos2_2, pos2_3, pos2_4, pos2_5 = 2;
 int pos_counter = 0;
+cShapeLine* index_tool_line;
+cShapeLine* thumb_tool_line;
+cMesh* drill;
+clock_t time_before = 0, time_now = 0;
 
 //---------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -204,7 +210,7 @@ int main(int argc, char* argv[])
 
 	sp = new Serial("COM6");
 	if (sp->IsConnected())
-		printf("We're connected");
+		printf("We're connected\n");
 
     //-----------------------------------------------------------------------
     // 3D - SCENEGRAPH
@@ -320,9 +326,9 @@ int main(int argc, char* argv[])
 	thumb->setWorkspaceRadius(1.0);
 
     // define a radius for the tool (graphical display)
-    tool->setRadius(0.01);
-	index_finger->setRadius(0.01);
-	thumb->setRadius(0.01);
+    tool->setRadius(0.03);
+	index_finger->setRadius(0.03);
+	thumb->setRadius(0.03);
 
     // hide the device sphere. only show proxy.
     tool->m_deviceSphere->setShowEnabled(false);
@@ -369,6 +375,55 @@ int main(int argc, char* argv[])
     graspLine->m_ColorPointB.set(1.0, 1.0, 1.0);
     graspLine->setShowEnabled(false);
 
+    index_tool_line = new cShapeLine(cVector3d(0,0,0), cVector3d(0,0,0));
+    world->addChild(index_tool_line);
+    index_tool_line->m_ColorPointA.set(0.7, 0.7, 0.7);
+    index_tool_line->m_ColorPointB.set(0.7, 0.7, 0.7);
+    //index_tool_line->setShowEnabled(false);
+
+    thumb_tool_line = new cShapeLine(cVector3d(0,0,0), cVector3d(0,0,0));
+    world->addChild(thumb_tool_line);
+    thumb_tool_line->m_ColorPointA.set(0.5, 0.5, 0.5);
+    thumb_tool_line->m_ColorPointB.set(0.5, 0.5, 0.5);
+    //thumb_tool_line->setShowEnabled(false);
+
+    // create a new mesh.
+    drill = new cMesh(world);
+
+    // load a drill like mesh and attach it to the tool
+    fileload = drill->loadFromFile(RESOURCE_PATH("resources/models/drill/drill.3ds"));
+    if (!fileload)
+    {
+        #if defined(_MSVC)
+        fileload = drill->loadFromFile("../../../bin/resources/models/drill/drill.3ds");
+        #endif
+    }
+    if (!fileload)
+    {
+        printf("Error - 3D Model failed to load correctly.\n");
+        close();
+        return (-1);
+    }
+
+    // resize tool mesh model
+    drill->scale(0.004);
+
+    // remove the collision detector. we do not want to compute any
+    // force feedback rendering on the object itself.
+    drill->deleteCollisionDetector(true);
+
+    // define a material property for the mesh
+    cMaterial mat;
+    mat.m_ambient.set(0.5, 0.5, 0.5);
+    mat.m_diffuse.set(0.8, 0.8, 0.8);
+    mat.m_specular.set(1.0, 1.0, 1.0);
+    drill->setMaterial(mat, true);
+    drill->computeAllNormals(true);
+	drill->rotate(cVector3d(0,1,0), -3.14/2);
+
+    // attach drill to tool
+    tool->m_proxyMesh->addChild(drill);
+	tool->rotate(cVector3d(0,0,1), 3.14/2);
 
     //-----------------------------------------------------------------------
     // COMPOSE THE VIRTUAL SCENE
@@ -395,7 +450,7 @@ int main(int argc, char* argv[])
     cMesh* object2 = new cMesh(world);
 
     // crate a cube mesh
-    double boxSize = 0.4;
+    double boxSize = 0.35;
     createCube(object0, boxSize);
     createCube(object1, boxSize);
     createCube(object2, boxSize);
@@ -438,9 +493,9 @@ int main(int argc, char* argv[])
     ODEBody2->createDynamicBox(boxSize, boxSize, boxSize);
 
     // define some mass properties for each cube
-    ODEBody0->setMass(0.05);
-    ODEBody1->setMass(0.05);
-    ODEBody2->setMass(0.05);
+    ODEBody0->setMass(0.15);
+    ODEBody1->setMass(0.30);
+    ODEBody2->setMass(0.45);
 
     // set position of each cube
     cVector3d tmpvct;
@@ -731,6 +786,7 @@ void updateHaptics(void)
     simClock.start(true);
 	int i = 0;
     // main haptic simulation loop
+	double temp_x;
     while(simulationRunning)
     {
         // compute global reference frames for each object
@@ -758,45 +814,69 @@ void updateHaptics(void)
 		char serialData[50];
 		double pos1 = 0;
 		double pos2 = 0;
-	   
-		if (sp->ReadData(serialData, strlen(serialData)) > 0)
+		time_now = GetTickCount();
+		if (i == 0)
 		{
-			if (sp->parse_num(serialData, pos1))
+			time_before = time_now;
+			i++;
+		}
+		int seconds = (time_now-time_before);
+		double dt = seconds/1000.0;
+						printf("Elapsed time: %f seconds\n", dt);
+		if ( dt > 0.100)
+		{
+			if (sp->ReadData(serialData, strlen(serialData)) > 0)
 			{
-				Sleep(50);
-				if (pos1 > 0.3)
+				if (sp->parse_num(serialData, pos1, pos2))
 				{
- 					pos1 = 0.126*pow(pos1,-1.07);
-					pos1 = (pos1+pos1_1+pos1_2)/3;
-					//pos1 = (pos1 + pos1_1 + pos1_2 + pos1_3 + pos1_4)/5;
-					pos1_5 = pos1_4;
-					pos1_4 = pos1_3;
-					pos1_3 = pos1_2;
-					pos1_2 = pos1_1;
-					pos1_1 = pos1;
+					if (pos1 > 0.3)
+					{
+ 						pos1 = 0.126*pow(pos1,-1.07);
+						pos1 = (pos1+pos1_1+pos1_2)/3;
+						pos1_5 = pos1_4;
+						pos1_4 = pos1_3;
+						pos1_3 = pos1_2;
+						pos1_2 = pos1_1;
+						pos1_1 = pos1;
 
- 					pos2 = 0.126*pow(pos2,-1.07);
-					pos2 = (pos2 + pos2_1 + pos2_2 + pos2_3 + pos2_4)/5;
-					pos2_5 = pos2_4;
-					pos2_4 = pos2_3;
-					pos2_3 = pos2_2;
-					pos2_2 = pos2_1;
-					pos2_1 = pos2;
-				}
-				else 
+					} 
+					else 
+					{
+						pos1 = previous_pos1;
+					}
+
+					if (pos2 > 0.3)
+					{
+ 						pos2 = 0.126*pow(pos2,-1.07);
+						pos2 = (pos2 + pos2_1 + pos2_2)/3;
+						pos2_5 = pos2_4;
+						pos2_4 = pos2_3;
+						pos2_3 = pos2_2;
+						pos2_2 = pos2_1;
+						pos2_1 = pos2;
+					} else 
+					{
+						pos2 = previous_pos2;
+					}
+
+					time_before = time_now;
+					printf("Received data %f and %f \n", pos1, pos2);
+				} else 
 				{
+					printf("Conversion failed\n");
 					pos1 = previous_pos1;
 					pos2 = previous_pos2;
 				}
-
-				printf("Received data %f and %f \n", pos1, pos2);
-			} else 
-			{
-				printf("Conversion failed\n");
-			}
 			
-		} else {
-			printf("Receive failed\n");
+			} else {
+				printf("Receive failed\n");
+				pos1 = previous_pos1;
+				pos2 = previous_pos2;
+			}
+		
+		}else{
+			pos1 = previous_pos1;
+			pos2 = previous_pos2;
 		}
 
 		if (pos_counter > 2)
@@ -806,11 +886,11 @@ void updateHaptics(void)
 
 			if (abs(dx1) < 0.1)
 			{
-				overall_pos1 -= dx1*10;
-				if (overall_pos1 < -0.1)
+				overall_pos1 += dx1*10;
+				if (overall_pos1 > 0.1)
 				{
-					overall_pos1 = -0.1;
-				} else if(overall_pos1 > 0)
+					overall_pos1 = 0.1;
+				} else if(overall_pos1 < 0)
 				{
 					overall_pos1 = 0;
 				}
@@ -818,11 +898,11 @@ void updateHaptics(void)
 
 			if (abs(dx2) < 0.1)
 			{
-				overall_pos2 -= dx2;
-				if (overall_pos2 < -0.1)
+				overall_pos2 += dx2*10;
+				if (overall_pos2 > 0.1)
 				{
-					overall_pos2 = -0.1;
-				} else if(overall_pos2 > 0)
+					overall_pos2 = 0.1;
+				} else if(overall_pos2 < 0)
 				{
 					overall_pos2 = 0;
 				}
@@ -834,14 +914,14 @@ void updateHaptics(void)
 		previous_pos1 = pos1;
 		previous_pos2 = pos2;
 
-		index_finger->setPos(pos.x - 0.15, pos.y, pos.z + 0.15 + overall_pos1);
+		index_finger->setPos(pos.x, pos.y + 0.25 - overall_pos1, pos.z - 0.25);
 		index_finger->setRot(rot);
 
 		index_finger->computeInteractionForces();
 
 		index_finger->updatePose();
 
-		thumb->setPos(pos.x + 0.1, pos.y - 0.15 + overall_pos2, pos.z - 0.05);
+		thumb->setPos(pos.x, pos.y - 0.25 + overall_pos2, pos.z - 0.25);
 		thumb->setRot(rot);
 
 		thumb->computeInteractionForces();
@@ -854,49 +934,58 @@ void updateHaptics(void)
 		double torque_temp1 = sqrt(pow(index_finger->m_lastComputedGlobalForce.x,2) + pow(index_finger->m_lastComputedGlobalForce.y,2) + pow(index_finger->m_lastComputedGlobalForce.z,2));
 		double torque_temp2 = sqrt(pow(thumb->m_lastComputedGlobalForce.x,2) + pow(thumb->m_lastComputedGlobalForce.y,2) + pow(thumb->m_lastComputedGlobalForce.z,2));
 
-		/*torque_str_tmp << std::setprecision(2) << torque_temp;
-
-		const std::string& torque_to_send = torque_str_tmp.str();
-
 		char to_send[50];
-		strcpy(to_send, "T");
-		strcat(to_send, torque_to_send.c_str());
-		strcat(to_send, ";");
-		*/
-
-		char to_send[50];
-		if (torque_temp1 > 0 && torque_temp2 > 0)
+		if (graspActive)
 		{
 			strcpy(to_send, "T");
 			strcat(to_send, "1/1");
 			strcat(to_send, ";");
-			userSwitch = true;
-		} else if (torque_temp1 == 0 && torque_temp2 > 0)
+
+			if (abs(overall_pos1 - holding_pos1) > 0.05|| abs(overall_pos2 - holding_pos2) > 0.05)
+			{
+				userSwitch = false;
+			} else 
+			{
+				userSwitch = true;
+			}
+		} else
 		{
-			strcpy(to_send, "T");
-			strcat(to_send, "0/1");
-			strcat(to_send, ";");
-			userSwitch = false;
-		} else if (torque_temp1 > 0 && torque_temp2 == 0)
-		{
-			strcpy(to_send, "T");
-			strcat(to_send, "1/0");
-			strcat(to_send, ";");
-			userSwitch = false;
-		} else 
-		{
-			strcpy(to_send, "T");
-			strcat(to_send, "0/0");
-			strcat(to_send, ";");
-			userSwitch = false;
+			if (torque_temp1 > 0 && torque_temp2 > 0)
+			{
+				strcpy(to_send, "T");
+				strcat(to_send, "1/1");
+				strcat(to_send, ";");
+				userSwitch = true;
+			} else if (torque_temp1 == 0 && torque_temp2 > 0)
+			{
+				strcpy(to_send, "T");
+				strcat(to_send, "0/1");
+				strcat(to_send, ";");
+				userSwitch = false;
+			} else if (torque_temp1 > 0 && torque_temp2 == 0)
+			{
+				strcpy(to_send, "T");
+				strcat(to_send, "1/0");
+				strcat(to_send, ";");
+				userSwitch = false;
+			} else 
+			{
+				strcpy(to_send, "T");
+				strcat(to_send, "0/0");
+				strcat(to_send, ";");
+				userSwitch = false;
+			}
 		}
 
-		if (sp->WriteData(to_send, strlen(to_send)))
+		if (dt > 0.1)
 		{
-			printf("Sent %s\n", to_send);
-		} else 
-		{
-			printf("Force data %s could not be sent\n", to_send);
+			if (sp->WriteData(to_send, strlen(to_send)))
+			{
+				printf("Sent %s\n", to_send);
+			} else 
+			{
+				printf("Force data %s could not be sent\n", to_send);
+			}
 		}
 
         // if the tool is currently grasping an object we simply update the interaction grasp force
@@ -911,54 +1000,55 @@ void updateHaptics(void)
             cVector3d globalGraspPos = globalGraspObjectPos + cMul(globalGraspObjectRot, graspPos);
 
             // retrieve the position of the tool in global coordinates
-            cVector3d globalToolPos  = index_finger->getProxyGlobalPos();
+			cVector3d globalToolPos  = (index_finger->getProxyGlobalPos()+thumb->getProxyGlobalPos())/2;
 
             // compute the offset between the tool and grasp point on the object
-            cVector3d offset = (globalToolPos - globalGraspObjectPos)*0.1;
+           /*  cVector3d offset = (globalToolPos - globalGraspObjectPos)*0.1;
             // model a spring between both points
-            double STIFFNESS = 4;
-			double damper = 1000;
+            double STIFFNESS = 50;
+	 		double damper = 1000;
 
             cVector3d force; //STIFFNESS * dpos;
 			//if (i == 10)
 			//{
-				if (previous_object_pos.x != 0 && previous_object_pos.y != 0 && previous_object_pos.z != 0)
-				{
-					force.x = -STIFFNESS*(globalGraspPos.x-(globalToolPos.x))-damper*(globalGraspPos.x-previous_object_pos.x);
-					force.y = -STIFFNESS*(globalGraspPos.y-(globalToolPos.y))-damper*(globalGraspPos.y-previous_object_pos.y);
-					force.z = -STIFFNESS*(globalGraspPos.z-(globalToolPos.z))-damper*(globalGraspPos.z-previous_object_pos.z);
+			if (previous_object_pos.x != 0 && previous_object_pos.y != 0 && previous_object_pos.z != 0)
+			{
+				force.x = -STIFFNESS*(globalGraspPos.x-(globalToolPos.x))-damper*(globalGraspPos.x-previous_object_pos.x);
+				force.y = -STIFFNESS*(globalGraspPos.y-(globalToolPos.y))-damper*(globalGraspPos.y-previous_object_pos.y);
+				force.z = -STIFFNESS*(globalGraspPos.z-(globalToolPos.z))-damper*(globalGraspPos.z-previous_object_pos.z);
 					
-					if (force.x > 10)
-						force.x = 10;
-					else if (force.x < -10)
-						force.x = -10;
+				if (force.x > 10)
+					force.x = 10;
+				else if (force.x < -10)
+					force.x = -10;
 
-					if (force.y > 10)
-						force.y = 10;
-					else if (force.y < -10)
-						force.y = -10;
+				if (force.y > 10)
+					force.y = 10;
+				else if (force.y < -10)
+					force.y = -10;
 
-					if (force.z > 10)
-						force.z = 10;
-					else if (force.z < -10)
-						force.z = -10;
+				if (force.z > 10)
+					force.z = 10;
+				else if (force.z < -10)
+					force.z = -10;
 
-					force.z += 9.81*graspObject->getMass();
-					// apply attraction force (grasp) onto object
-					graspObject->addGlobalForceAtGlobalPos(force, globalGraspObjectPos);
-				}
-									previous_object_pos = globalGraspPos;
-
-			//printf("Force: %f, %f, %f", graspObject->m_lastComputedGlobalForce);
-            // scale magnitude and apply opposite force to haptic device
-           // tool->m_lastComputedGlobalForce.add(cMul(-1.0, force));
-
-		//	graspObject->setPosition(globalToolPos);
-
-			//  graspObject->addGlobalForceAtGlobalPos(force, globalToolPos);
-            // update both end points of the line which is used for display purposes only
+				//force.z += 9.81*graspObject->getMass();
+				// apply attraction force (grasp) onto object
+				//graspObject->addGlobalForceAtGlobalPos(force, globalGraspObjectPos);
+			}*/
+			graspObject->disableDynamics();
+			graspObject->setPosition(globalToolPos);
+			
+			previous_object_pos = globalGraspPos;
             graspLine->m_pointA = globalGraspPos;
             graspLine->m_pointB = globalToolPos;
+
+			cVector3d force;
+			force.x = 0;
+			force.y = 0;
+			force.z = -9.81*graspObject->getMass();
+
+			tool->m_lastComputedGlobalForce += force;
 			//}
 
         }
@@ -979,6 +1069,7 @@ void updateHaptics(void)
                 if (graspObject != NULL)
                 {
                     graspObject->m_imageModel->setHapticEnabled(true, true);
+					graspObject->enableDynamics();
                 }
             }
 
@@ -1026,11 +1117,14 @@ void updateHaptics(void)
                         graspActive = true;
 
                         // enable small line which display the offset between the tool and the grasp point
-                        graspLine->setShowEnabled(true);
+                     //   graspLine->setShowEnabled(true);
 
                         // disable haptic interaction between the tool and the grasped device.
                         // this is performed for stability reasons.
                         graspObject->m_imageModel->setHapticEnabled(false, true);
+
+						holding_pos1 = overall_pos1;
+						holding_pos2 = overall_pos2;
                     }
 
                     // retrieve the haptic interaction force being applied to the tool
@@ -1092,7 +1186,7 @@ void updateHaptics(void)
 
         // retrieve simulation time and compute next interval
         double time = simClock.getCurrentTimeSeconds();
-        double nextSimInterval = cClamp(time, 0.00001, 0.001);
+        double nextSimInterval = cClamp(time, 0.0001, 0.001);
 
         // reset clock
         simClock.reset();
@@ -1100,7 +1194,7 @@ void updateHaptics(void)
 
         // update simulation
         ODEWorld->updateDynamics(nextSimInterval);
-		
+		/*
 		dpos.x = (tool->getProxyGlobalPos().x - previous_pos.x);
 		dpos.y = (tool->getProxyGlobalPos().y - previous_pos.y);
 		dpos.z = (tool->getProxyGlobalPos().z - previous_pos.z);
@@ -1113,9 +1207,12 @@ void updateHaptics(void)
 		i = 0;
 		}
 		else 
-			i++;
-		
-
+			i++;*/
+		index_tool_line->m_pointA = index_finger->getProxyGlobalPos();
+		index_tool_line->m_pointB = tool->getProxyGlobalPos();
+		thumb_tool_line->m_pointA = thumb->getProxyGlobalPos();
+		thumb_tool_line->m_pointB = tool->getProxyGlobalPos();
+	//	Sleep(80);
     }
 
     // exit haptics thread
