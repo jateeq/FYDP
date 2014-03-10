@@ -8,7 +8,7 @@
 /* Constants */
 const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS = 30;	//degrees
+const int MIN_SERVO_POS = 100;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
@@ -63,8 +63,8 @@ void setup()
 	force_1 = -1;
 	force_2 = -1;
 	
-	servo_obj_1.write( servo_pos_1 );
-	servo_obj_2.write( servo_pos_2 );
+	//servo_obj_1.write( servo_pos_1 );
+	//servo_obj_2.write( servo_pos_2 );
 } 
 
 
@@ -80,7 +80,7 @@ void loop()
 		IR_val_1[ i ] = analogRead( IR_PIN_1 );
 		IR_val_2[ i ] = analogRead( IR_PIN_2 );
 	}
-	IR_val_1[ 0 ] = average( IR_val_1 );	
+	IR_val_1[ 0 ] = average( IR_val_1 );
 	IR_val_2[ 0 ] = average( IR_val_2 );
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );
 	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
@@ -107,23 +107,26 @@ void loop()
 	/* Update the servos based on new IR reading */
 	force_1 = -1;
 	force_2 = -1;	
-	if (getForce( serialMsg, &force_1, &force_2	))
-	{
-		updateServo( servo_pos_1, &servo_obj_1, force_1, dir_1);
-		updateServo( servo_pos_2, &servo_obj_2, force_2, dir_2 );
-	}
+	//if (getForce( serialMsg, &force_1, &force_2	))
+	//{
+		force_1 = 0;
+		force_2 = 0;
+		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1);
+		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2 );
+	//}
 			    
 	//Serial.print(IR_val_1_cur, DEC);
 	//Serial.print(' ');
-	Serial.println(dir_2, DEC);
+	//Serial.println(dir_2, DEC);
 	
 	// Delay added for optimal performance
 	delay( LOOP_DELAY );
 }
 
 
-void updateServo( int servo_pos, Servo * servo_obj, int force, int direction )
+void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int direction )
 {  	
+	int servo_pos = *servo_pos_handle;
 	/* move servo if no object detected */
 	if ( force  == 1 )
 	{
@@ -146,7 +149,8 @@ void updateServo( int servo_pos, Servo * servo_obj, int force, int direction )
 			}
 		}
 		
-		// sets the servo position according to the scaled value 
+		// sets the servo position according to the scaled value
+		*servo_pos_handle = servo_pos;
 		(*servo_obj).write(servo_pos); 
 	}
 }
