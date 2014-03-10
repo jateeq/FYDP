@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
     cMesh* object2 = new cMesh(world);
 
     // crate a cube mesh
-    double boxSize = 0.35;
+    double boxSize = 0.30;
     createCube(object0, boxSize);
     createCube(object1, boxSize);
     createCube(object2, boxSize);
@@ -822,7 +822,7 @@ void updateHaptics(void)
 		}
 		int seconds = (time_now-time_before);
 		double dt = seconds/1000.0;
-						printf("Elapsed time: %f seconds\n", dt);
+					//	printf("Elapsed time: %f seconds\n", dt);
 		if ( dt > 0.100)
 		{
 			if (sp->ReadData(serialData, strlen(serialData)) > 0)
@@ -898,11 +898,11 @@ void updateHaptics(void)
 
 			if (abs(dx2) < 0.1)
 			{
-				overall_pos2 += dx2*10;
-				if (overall_pos2 > 0.1)
+				overall_pos2 -= dx2*10;
+				if (overall_pos2 < -0.1)
 				{
-					overall_pos2 = 0.1;
-				} else if(overall_pos2 < 0)
+					overall_pos2 = -0.1;
+				} else if(overall_pos2 > 0)
 				{
 					overall_pos2 = 0;
 				}
@@ -921,12 +921,14 @@ void updateHaptics(void)
 
 		index_finger->updatePose();
 
-		thumb->setPos(pos.x, pos.y - 0.25 + overall_pos2, pos.z - 0.25);
+		thumb->setPos(pos.x, pos.y - 0.25 - overall_pos2, pos.z - 0.25);
 		thumb->setRot(rot);
 
 		thumb->computeInteractionForces();
 
 		thumb->updatePose();
+
+		tool->m_lastComputedGlobalForce += index_finger->m_lastComputedGlobalForce + thumb->m_lastComputedGlobalForce;
 
         // compute global reference frames for each object
         world->computeGlobalPositions(true);

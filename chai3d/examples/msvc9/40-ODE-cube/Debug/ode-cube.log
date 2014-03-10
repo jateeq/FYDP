@@ -1,4 +1,4 @@
-﻿Build started 10/03/2014 4:33:52 PM.
+﻿Build started 10/03/2014 7:13:51 PM.
      1>Project "C:\FYDP\chai3d\examples\msvc9\40-ODE-cube\ode-cube.vcxproj" on node 3 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\40 - ODE-cube.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -20,4 +20,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.37
+Time Elapsed 00:00:00.22
