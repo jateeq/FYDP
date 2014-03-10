@@ -84,12 +84,10 @@ void loop()
 	IR_val_2[ 0 ] = average( IR_val_2 );
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );
 	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
-	//print1IRval( IR_val_1_cur );
 	
 	/* Send the IR value in voltage to the remote robot this is used to figure 
 	    out the finger position */
-	//print1IRval_voltage( (float) IR_val_1_cur * IR_RES );		
-	//print1IRval_voltage( (float) IR_val_2_cur * IR_RES );
+	sendFingerPos2Remote( ( float ) IR_val_1_cur * IR_RES, ( float ) IR_val_2_cur * IR_RES );
 	
 	/* Find out direction of flag movement - Note that the sensor value decreases 
 	   the farther it is from the sensor */
@@ -107,17 +105,11 @@ void loop()
 	/* Update the servos based on new IR reading */
 	force_1 = -1;
 	force_2 = -1;	
-	//if (getForce( serialMsg, &force_1, &force_2	))
-	//{
-		force_1 = 0;
-		force_2 = 0;
+	if (getForce( serialMsg, &force_1, &force_2	))
+	{
 		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1);
 		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2 );
-	//}
-			    
-	//Serial.print(IR_val_1_cur, DEC);
-	//Serial.print(' ');
-	//Serial.println(dir_2, DEC);
+	}			 
 	
 	// Delay added for optimal performance
 	delay( LOOP_DELAY );
@@ -180,11 +172,13 @@ void print1IRval( int val )
 	Serial.println('e');
 }
 
-void print1IRval_voltage( float val )
+void sendFingerPos2Remote( float pos_1, float pos_2 )
 {
-	Serial.print('i');
-	Serial.print(val, DEC);
-	Serial.println('e');
+	Serial.print( 'i' );
+	Serial.print( pos_1, DEC );
+	Serial.print( '/' );
+	Serial.print( pos_2, DEC );
+	Serial.println( 'e' );
 }
 
 /*Converts a string to float. Can't use atof directly since it expects a char 
