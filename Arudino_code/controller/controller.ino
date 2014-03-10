@@ -22,8 +22,8 @@ const int LOOP_DELAY = 75;		//ms
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
 Servo servo_obj_2;				//Servo 2
-int dir1;						//Direction flag of sensor 1 is moving in
-int dir2;						//Direction flag of sensor 2 is moving in
+int dir_1;						//Direction flag of sensor 1 is moving in
+int dir_2;						//Direction flag of sensor 2 is moving in
 int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
 int IR_val_2[ NUM_IR_READINGS ] = { -1 };
 int IR_val_1_cur;
@@ -58,8 +58,8 @@ void setup()
 	/* Initialize values */
 	servo_pos_1 = MIN_SERVO_POS;
 	servo_pos_2 = MIN_SERVO_POS;
-	dir1 = -1;
-	dir2 = -1;
+	dir_1 = -1;
+	dir_2 = -1;
 	force_1 = -1;
 	force_2 = -1;
 	
@@ -80,22 +80,19 @@ void loop()
 		IR_val_1[ i ] = analogRead( IR_PIN_1 );
 		IR_val_2[ i ] = analogRead( IR_PIN_2 );
 	}
-
-	IR_val_1[ 0 ] = average( IR_val_1 );
-	
+	IR_val_1[ 0 ] = average( IR_val_1 );	
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
 	//print1IRval( IR_val_1_cur );
 	
-	//send the IR value in voltage to the remote robot this is used to figure out the finger position
+	/* Send the IR value in voltage to the remote robot this is used to figure 
+	    out the finger position */
 	//print1IRval_voltage( (float) IR_val_1_cur * IR_RES );		
 	//print1IRval_voltage( (float) IR_val_2_cur * IR_RES );
 	
-	/* 	Find out direction of flag movement 
-		Note that the sensor value decreases the farther it is from the 
-		sensor
-	*/
-	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir1 );	
-	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir2 );
+	/* Find out direction of flag movement - Note that the sensor value decreases 
+	   the farther it is from the sensor */
+	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1 );	
+	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2 );
 	
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
@@ -104,44 +101,52 @@ void loop()
 		char inChar = Serial.read();
 		serialMsg += inChar;
 	}
-/*	
-	//reset force from last time
-	force_1 = -1; 
-	force_2 = -1; 
-	if (getForce( serialMsg, &force_1, &force_2	))
-	{*/
-		/* move servo if no object detected */
-/*		if ( force_1  == 1 )
-		{
-			//hold previous position
-		}
-		else if ( force_1 == 0 )
-		{		
-			if ( dir == 1 )
-			{
-				if( servo_pos_1 < MAX_SERVO_POS )
-				{
-					servo_pos_1 += MIN_SERVO_DISP;
-				}
-			}
-			else if ( dir == 0 )
-			{
-				if( servo_pos_1 > MIN_SERVO_POS )
-				{
-					servo_pos_1 -= MIN_SERVO_DISP;
-				}
-			}
-			
-			// sets the servo position according to the scaled value 
-			servo_obj_1.write(servo_pos_1); 
-		}
-	} */
-    
-	Serial.print(dir1, DEC);
-	Serial.print(' ');
-	Serial.println(dir2, DEC);
 	
-	delay( LOOP_DELAY ); // waits for the servo to get there
+	/* Update the servos based on new IR reading */
+	force_1 = -1;
+	force_2 = -1;	
+	if (getForce( serialMsg, &force_1, &force_2	))
+	{
+		updateServo( servo_pos_1, &servo_obj_1, force_1, dir_1);
+		updateServo( servo_pos_2, &servo_obj_2, force_2, dir_2 );
+	}
+			    
+	Serial.print(dir_1, DEC);
+	Serial.print(' ');
+	Serial.println(dir_2, DEC);
+	
+	// Delay added for optimal performance
+	delay( LOOP_DELAY );
+}
+
+
+void updateServo( int servo_pos, Servo * servo_obj, int force, int direction )
+{  	
+	/* move servo if no object detected */
+	if ( force  == 1 )
+	{
+		//hold previous position
+	}
+	else if ( force == 0 )
+	{		
+		if ( direction == 1 )
+		{
+			if( servo_pos < MAX_SERVO_POS )
+			{
+				servo_pos += MIN_SERVO_DISP;
+			}
+		}
+		else if ( direction == 0 )
+		{
+			if( servo_pos > MIN_SERVO_POS )
+			{
+				servo_pos -= MIN_SERVO_DISP;
+			}
+		}
+		
+		// sets the servo position according to the scaled value 
+		(*servo_obj).write(servo_pos); 
+	}
 }
 
 void FindFingerDir( int cur, int prev, int * dir )
