@@ -8,7 +8,7 @@
 /* Constants */
 const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS = 50;	//degrees
+const int MIN_SERVO_POS = 30;	//degrees
 const int MAX_SERVO_POS = 100;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
@@ -22,7 +22,8 @@ const int LOOP_DELAY = 75;		//ms
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
 Servo servo_obj_2;				//Servo 2
-int dir;						//Direction flag is moving in
+int dir1;						//Direction flag of sensor 1 is moving in
+int dir2;						//Direction flag of sensor 2 is moving in
 int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
 int IR_val_2[ NUM_IR_READINGS ] = { -1 };
 int IR_val_1_cur;
@@ -42,8 +43,9 @@ String serialMsg;
 void print1IRval( int val );
 float strToFloat( String string);
 int strToInt(String string);
-boolean getForce( String string, int * num1 );
+boolean getForce( String string, int * num1, int * num2 );
 int average ( int values[] );
+void FindFingerDir( int cur, int prev, int * dir );
 
 void setup() 
 { 
@@ -56,9 +58,13 @@ void setup()
 	/* Initialize values */
 	servo_pos_1 = MIN_SERVO_POS;
 	servo_pos_2 = MIN_SERVO_POS;
-	dir = -1;
+	dir1 = -1;
+	dir2 = -1;
 	force_1 = -1;
 	force_2 = -1;
+	
+	servo_obj_1.write( servo_pos_1 );
+	servo_obj_2.write( servo_pos_2 );
 } 
 
 
@@ -80,27 +86,16 @@ void loop()
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
 	//print1IRval( IR_val_1_cur );
 	
-	print1IRval_voltage( (float) IR_val_1_cur * IR_RES );	//send the IR value in voltage to the remote robot
-											//this is used to figure out the finger position
-									
+	//send the IR value in voltage to the remote robot this is used to figure out the finger position
+	//print1IRval_voltage( (float) IR_val_1_cur * IR_RES );		
+	//print1IRval_voltage( (float) IR_val_2_cur * IR_RES );
+	
 	/* 	Find out direction of flag movement 
 		Note that the sensor value decreases the farther it is from the 
 		sensor
 	*/
-	if ( ( IR_val_1_cur - IR_val_1_prev ) > MIN_FLAG_DISP )
-	{
-		//flag is moving towards IR sensor (finger moving up)		
-		dir = 0;
-	}
-	else if ( ( IR_val_1_cur - IR_val_1_prev ) < ( - MIN_FLAG_DISP ) )
-	{
-		//flag is moving away from IR sensor (finger moving down)
-		dir = 1;
-	}
-	else
-	{
-		dir = -1;
-	}
+	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir1 );	
+	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir2 );
 	
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
@@ -109,20 +104,19 @@ void loop()
 		char inChar = Serial.read();
 		serialMsg += inChar;
 	}
-	
+/*	
 	//reset force from last time
 	force_1 = -1; 
-	
-	if (getForce( serialMsg, &force_1 ))
-	{
+	force_2 = -1; 
+	if (getForce( serialMsg, &force_1, &force_2	))
+	{*/
 		/* move servo if no object detected */
-		if ( force_1  == 1 )
+/*		if ( force_1  == 1 )
 		{
 			//hold previous position
 		}
 		else if ( force_1 == 0 )
-		{
-		
+		{		
 			if ( dir == 1 )
 			{
 				if( servo_pos_1 < MAX_SERVO_POS )
@@ -141,16 +135,31 @@ void loop()
 			// sets the servo position according to the scaled value 
 			servo_obj_1.write(servo_pos_1); 
 		}
-	}   
-	//print1IRval(servo_pos_1);
+	} */
     
-	/*Serial.print('i');
-	Serial.print(IR_val_1_cur, DEC);
-	Serial.println('e');
-	Serial.print(servo_pos_1, DEC);
-	Serial.print('/');
-	*/
+	Serial.print(dir1, DEC);
+	Serial.print(' ');
+	Serial.println(dir2, DEC);
+	
 	delay( LOOP_DELAY ); // waits for the servo to get there
+}
+
+void FindFingerDir( int cur, int prev, int * dir )
+{
+	if ( ( cur - prev ) > MIN_FLAG_DISP )
+	{
+		//flag is moving towards IR sensor (finger moving up)		
+		*dir = 0;
+	}
+	else if ( ( cur - prev ) < ( - MIN_FLAG_DISP ) )
+	{
+		//flag is moving away from IR sensor (finger moving down)
+		*dir = 1;
+	}
+	else
+	{
+		*dir = -1;
+	}
 }
 
 void print1IRval( int val )
@@ -183,7 +192,7 @@ int strToInt(String string)
 	return atoi(floatbuf);
 }
 
-boolean getForce( String string, int * num1 )
+boolean getForce( String string, int * num1, int * num2 )
 {
 	int index1 = -1;
 	int index2 = -1;
@@ -203,7 +212,8 @@ boolean getForce( String string, int * num1 )
 
 	if (index1 < index2 && index1 != -1 && index2 != -1)
 	{		
-		*num1 = (string[index1+1]-'0');
+		*num1 = ( string[ index1 + 1 ] - '0' );
+		*num2 = ( string[ index2 + 1 ] - '0' );
 		return true;
 	} 
 	else 
@@ -234,7 +244,7 @@ int smooth(int data, float filterVal, float smoothedVal){
     filterVal = 0;
   }
 
-  smoothedVal = (data * (1 - filterVal)) + (smoothedVal  *  filterVal);
+  smoothedVal = ( data * ( 1 - filterVal ) ) + ( smoothedVal  *  filterVal );
 
-  return (int)smoothedVal;
+  return ( int )smoothedVal;
 }
