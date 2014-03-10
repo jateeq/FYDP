@@ -72,7 +72,7 @@ void loop()
 {
 	//Record previous IR vals so change in flag position can be found
 	IR_val_1_prev = IR_val_1_cur;
-	IR_val_2_prev = IR_val_1_cur;
+	IR_val_2_prev = IR_val_2_cur;
 	
 	/* Read a sequence of IR readings, average to filter out some noise */
 	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
@@ -81,7 +81,9 @@ void loop()
 		IR_val_2[ i ] = analogRead( IR_PIN_2 );
 	}
 	IR_val_1[ 0 ] = average( IR_val_1 );	
-	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );	
+	IR_val_2[ 0 ] = average( IR_val_2 );
+	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );
+	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
 	//print1IRval( IR_val_1_cur );
 	
 	/* Send the IR value in voltage to the remote robot this is used to figure 
@@ -111,8 +113,8 @@ void loop()
 		updateServo( servo_pos_2, &servo_obj_2, force_2, dir_2 );
 	}
 			    
-	Serial.print(dir_1, DEC);
-	Serial.print(' ');
+	//Serial.print(IR_val_1_cur, DEC);
+	//Serial.print(' ');
 	Serial.println(dir_2, DEC);
 	
 	// Delay added for optimal performance
