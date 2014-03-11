@@ -4,7 +4,7 @@
 
 #include <Servo.h>
 
-//#define REMOTE 1
+#define REMOTE 1
 
 /* Constants */
 const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
