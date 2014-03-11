@@ -71,6 +71,7 @@ void cShapeLine::render(const int a_renderMode)
     glDisable(GL_LIGHTING);
 
     // draw line
+			glLineWidth((GLfloat)3);
     glBegin(GL_LINES);
         m_ColorPointA.render();
         glVertex3dv(&m_pointA.x);
