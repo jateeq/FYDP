@@ -8,8 +8,8 @@
 /* Constants */
 const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS = 30;	//degrees
-const int MAX_SERVO_POS = 100;	//degrees
+const int MIN_SERVO_POS = 70;	//degrees
+const int MAX_SERVO_POS = 120;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -63,8 +63,8 @@ void setup()
 	force_1 = -1;
 	force_2 = -1;
 	
-	//servo_obj_1.write( servo_pos_1 );
-	//servo_obj_2.write( servo_pos_2 );
+	servo_obj_1.write( servo_pos_1 );
+	servo_obj_2.write( servo_pos_2 );
 } 
 
 
@@ -86,11 +86,11 @@ void loop()
 	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
 	
 	/* Send the IR value in voltage to the remote robot this is used to figure 
-	    out the finger position */
+	out the finger position */
 	sendFingerPos2Remote( ( float ) IR_val_1_cur * IR_RES, ( float ) IR_val_2_cur * IR_RES );
 	
 	/* Find out direction of flag movement - Note that the sensor value decreases 
-	   the farther it is from the sensor */
+	the farther it is from the sensor */
 	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1 );	
 	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2 );
 	
@@ -104,7 +104,7 @@ void loop()
 	
 	/* Update the servos based on new IR reading */
 	force_1 = -1;
-	force_2 = -1;	
+	force_2 = -1;
 	if (getForce( serialMsg, &force_1, &force_2	))
 	{
 		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1);
