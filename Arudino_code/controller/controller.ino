@@ -4,6 +4,7 @@
 
 #include <Servo.h>
 
+//#define REMOTE 1
 
 /* Constants */
 const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
@@ -103,13 +104,20 @@ void loop()
 	}
 	
 	/* Update the servos based on new IR reading */
+#ifdef REMOTE
 	force_1 = -1;
 	force_2 = -1;
 	if (getForce( serialMsg, &force_1, &force_2	))
 	{
+#else
+	force_1 = 0;
+	force_2 = 0;
+#endif
 		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1);
 		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2 );
-	}			 
+#ifdef REMOTE
+	}		
+#endif	 	
 	
 	// Delay added for optimal performance
 	delay( LOOP_DELAY );
