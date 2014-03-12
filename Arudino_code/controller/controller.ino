@@ -7,7 +7,7 @@
 //#define REMOTE 1
 
 /* Constants */
-const int MIN_FLAG_DISP = 3;	//Min dist flag has to move in either direction to move servo
+const int MIN_FLAG_DISP_1 = 3;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP_1 = 7;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS_1 = 70;	//degrees
 const int MAX_SERVO_POS_1 = 130;	//degrees
@@ -21,7 +21,6 @@ const int IR_PIN_1 = 0;			//IR 1 connected to analog pin 1
 const int IR_PIN_2 = 1;			//IR 2 connected to analog pin 2
 const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
-//const int LOOP_DELAY = 75;		//ms
 const int LOOP_DELAY = 100;		//ms
 
 /* House Keeping */
@@ -105,8 +104,8 @@ void loop()
 
 	/* Find out direction of flag movement - Note that the sensor value decreases 
 	the farther it is from the sensor */
-	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1 );	
-	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2 );
+	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1, MIN_FLAG_DISP_1 );	
+	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2, MIN_FLAG_DISP_1 );
 	
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
@@ -173,14 +172,14 @@ void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int dire
 	}
 }
 
-void FindFingerDir( int cur, int prev, int * dir )
+void FindFingerDir( int cur, int prev, int * dir, int min_flag_disp )
 {
-	if ( ( cur - prev ) > MIN_FLAG_DISP )
+	if ( ( cur - prev ) > min_flag_disp )
 	{
 		//flag is moving towards IR sensor (finger moving up)		
 		*dir = 0;
 	}
-	else if ( ( cur - prev ) < ( - MIN_FLAG_DISP ) )
+	else if ( ( cur - prev ) < ( - min_flag_disp ) )
 	{
 		//flag is moving away from IR sensor (finger moving down)
 		*dir = 1;
