@@ -12,9 +12,9 @@ const int MIN_SERVO_DISP_1 = 7;	//Servo will move this many degrees every time a
 const int MIN_SERVO_POS_1 = 90;	//degrees
 const int MAX_SERVO_POS_1 = 120;	//degrees
 const int MIN_FLAG_DISP_2 = 4;	//Min dist flag has to move in either direction to move servo
-const int MIN_SERVO_DISP_2 = 5;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS_2 = 10;	//degrees
-const int MAX_SERVO_POS_2 = 40;	//degrees
+const int MIN_SERVO_DISP_2 = 10;	//Servo will move this many degrees every time actuated
+const int MIN_SERVO_POS_2 = 90;	//degrees
+const int MAX_SERVO_POS_2 = 140;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -24,13 +24,12 @@ const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
 const int LOOP_DELAY = 100;		//ms
 const int NUM_DECIMAL_PLACES = 3;
+
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
 Servo servo_obj_2;				//Servo 2
 int dir_1;						//Direction flag of sensor 1 is moving in
 int dir_2;						//Direction flag of sensor 2 is moving in
-int IR_val_1[ NUM_IR_READINGS ] = { -1 }; 
-int IR_val_2[ NUM_IR_READINGS ] = { -1 };
 int IR_val_1_cur;
 int IR_val_2_cur;
 int IR_val_1_prev;
@@ -51,6 +50,7 @@ int strToInt(String string);
 boolean getForce( String string, int * num1, int * num2 );
 int average ( int values[] );
 void FindFingerDir( int cur, int prev, int * dir );
+void ReadFingerPos( int * IR_val, int IR_val_prev, int IR_pin );
 
 void setup() 
 { 
@@ -74,19 +74,10 @@ void setup()
 	servo_obj_2.write( servo_pos_2 );
 } 
 
-
 void loop() 
-{	
-	/* Read a sequence of IR readings, average to filter out some noise */
-	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
-	{
-		IR_val_1[ i ] = analogRead( IR_PIN_1 );
-		IR_val_2[ i ] = analogRead( IR_PIN_2 );
-	}
-	IR_val_1[ 0 ] = average( IR_val_1 );
-	IR_val_2[ 0 ] = average( IR_val_2 );
-	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );
-	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
+{			
+	ReadFingerPos( &IR_val_1_cur, IR_val_1_prev, IR_PIN_1 );
+	ReadFingerPos( &IR_val_2_cur, IR_val_2_prev, IR_PIN_2 );
 	
 #ifdef REMOTE
 	/* Send the IR value in voltage to the remote robot this is used to figure 
@@ -141,6 +132,17 @@ void loop()
 	delay( LOOP_DELAY );
 }
 
+void ReadFingerPos( int * IR_val, int IR_val_prev, int IR_pin )
+{
+	int IR_val_array[ NUM_IR_READINGS ]; 
+	/* Read a sequence of IR readings, average to filter out some noise */
+	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
+	{
+		IR_val_array[ i ] = analogRead( IR_pin );
+	}
+	IR_val_array[ 0 ] = average( IR_val_array );
+	*IR_val =  smooth( IR_val_array[ 0 ], 0.7, IR_val_prev );
+}
 
 void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int direction, int min_servo_disp, int min_servo_pos,
 					int max_servo_pos )
