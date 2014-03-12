@@ -4,7 +4,7 @@
 
 #include <Servo.h>
 
-//#define REMOTE 1
+#define REMOTE 1
 #define UPDATE_WITH_IR 2
 
 
@@ -15,9 +15,9 @@ const int MIN_SERVO_POS_1 = 90;	//degrees
 const int MAX_SERVO_POS_1 = 120;	//degrees
 const int MIN_FLAG_DISP_2 = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP_2 = 10;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS_2 = 70;	//degrees
+const int MIN_SERVO_POS_2 = 30;	//degrees
 const int MAX_SERVO_POS_2 = 140;	//degrees
-const int NUM_IR_READINGS =10;	//this many readings taken and averaged to get overall reading
+const int NUM_IR_READINGS = 10;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
 const int IR_PIN_1 = 0;			//IR 1 connected to analog pin 1
@@ -119,12 +119,10 @@ void loop()
 	force_2 = -1;
 	if ( getForce( serialMsg, &force_1, &force_2 ) )
 	{
-		servo_pos_1 = updateServo( servo_pos_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );		
+		servo_pos_1 = updateServo( servo_pos_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
 		servo_pos_2 = updateServo( servo_pos_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
 	}
 #else
-	force_1 = 0;
-	force_2 = 0;	
 	#ifdef UPDATE_WITH_IR	
 	servo_pos_1 = updateServoWithIR( IR_val_1_cur, MIN_FLAG_POS_1, MAX_FLAG_POS_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
 	servo_pos_2 = updateServoWithIR( IR_val_2_cur, MIN_FLAG_POS_2, MAX_FLAG_POS_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
@@ -153,14 +151,14 @@ void loop()
 
 void ReadFingerPos( int * IR_val, int IR_val_prev, int IR_pin )
 {
-	int IR_val_array[ NUM_IR_READINGS ]; 
 	/* Read a sequence of IR readings, average to filter out some noise */
+	int temp = 0;
 	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
 	{
-		IR_val_array[ i ] = analogRead( IR_pin );
+		temp += analogRead( IR_pin );
 	}
-	IR_val_array[ 0 ] = average( IR_val_array );
-	*IR_val =  smooth( IR_val_array[ 0 ], 0.7, IR_val_prev );
+	temp = temp / NUM_IR_READINGS;
+	*IR_val =  smooth( temp, 0.7, IR_val_prev );
 }
 
 #ifdef UPDATE_WITH_IR
