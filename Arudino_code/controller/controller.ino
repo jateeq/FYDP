@@ -4,7 +4,9 @@
 
 #include <Servo.h>
 
-#define REMOTE 1
+//#define REMOTE 1
+#define UPDATE_WITH_IR 2
+
 
 /* Constants */
 const int MIN_FLAG_DISP_1 = 3;	//Min dist flag has to move in either direction to move servo
@@ -24,6 +26,11 @@ const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
 const int LOOP_DELAY = 100;		//ms
 const int NUM_DECIMAL_PLACES = 3;
+
+#ifdef UPDATE_WITH_IR
+const int MIN_FLAG_POS_1 = 0;
+const int MAX_FLAG_POS_1 = 1023;
+#endif
 
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
@@ -51,6 +58,9 @@ boolean getForce( String string, int * num1, int * num2 );
 int average ( int values[] );
 void FindFingerDir( int cur, int prev, int * dir );
 void ReadFingerPos( int * IR_val, int IR_val_prev, int IR_pin );
+#ifdef UPDATE_WITH_IR
+int updateServoWithIR( int IR_reading, int min_flag_pos, int max_flag_pos, int min_servo_pos, int max_servo_pos );
+#endif
 
 void setup() 
 { 
@@ -84,7 +94,7 @@ void loop()
 	out the finger position */
 	//sendFingerPos2Remote( convertToDP( IR_val_1_cur * IR_RES, 4 ), convertToDP( IR_val_2_cur * IR_RES, 4 ) );
 	sendFingerPos2Remote( ( float ) IR_val_1_cur * IR_RES, ( float ) IR_val_2_cur * IR_RES );
-#else
+#elseif !UPDATE_WITH_IR
 	//print1IRval( IR_val_2_cur );
 	Serial.print( IR_val_1_prev );
 	Serial.print('/');
@@ -120,8 +130,18 @@ void loop()
 #else
 	force_1 = 0;
 	force_2 = 0;
+	
+	#ifdef UPDATE_WITH_IR	
+	servo_pos_1 = updateServoWithIR( IR_val_1_cur, MIN_FLAG_POS_1, MAX_FLAG_POS_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
+	//servo_obj_1.write( servo_pos_1 );
+	//servo_obj_2.write( servo_pos_2 );
+	#else
+	force_1 = 0;
+	force_2 = 0;
 	updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
-	updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );	
+	updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
+	#endif
+	
 #endif	 	
 	
 	//Record previous IR vals so change in flag position can be found
@@ -143,6 +163,18 @@ void ReadFingerPos( int * IR_val, int IR_val_prev, int IR_pin )
 	IR_val_array[ 0 ] = average( IR_val_array );
 	*IR_val =  smooth( IR_val_array[ 0 ], 0.7, IR_val_prev );
 }
+
+#ifdef UPDATE_WITH_IR
+
+int updateServoWithIR( int IR_reading, int min_flag_pos, int max_flag_pos, int min_servo_pos, int max_servo_pos )
+{
+	int servo_pos;
+	servo_pos = map( IR_reading, min_flag_pos, max_flag_pos, min_servo_pos, max_servo_pos );
+	servo_pos = constrain( servo_pos, min_servo_pos, max_servo_pos ); //map does not constrain range bounds
+	return servo_pos;
+}
+
+#endif
 
 void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int direction, int min_servo_disp, int min_servo_pos,
 					int max_servo_pos )
