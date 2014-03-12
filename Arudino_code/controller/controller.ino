@@ -4,16 +4,17 @@
 
 #include <Servo.h>
 
-//#define REMOTE 1
+#define REMOTE 1
 
 /* Constants */
 const int MIN_FLAG_DISP_1 = 3;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP_1 = 7;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS_1 = 70;	//degrees
-const int MAX_SERVO_POS_1 = 130;	//degrees
-const int MIN_SERVO_DISP_2 = 7;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS_2 = 30;	//degrees
-const int MAX_SERVO_POS_2 = 70;	//degrees
+const int MIN_SERVO_POS_1 = 90;	//degrees
+const int MAX_SERVO_POS_1 = 120;	//degrees
+const int MIN_FLAG_DISP_2 = 4;	//Min dist flag has to move in either direction to move servo
+const int MIN_SERVO_DISP_2 = 5;	//Servo will move this many degrees every time actuated
+const int MIN_SERVO_POS_2 = 10;	//degrees
+const int MAX_SERVO_POS_2 = 40;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -61,7 +62,7 @@ void setup()
 	 
 	/* Initialize values */
 	servo_pos_1 = MIN_SERVO_POS_1;
-	servo_pos_2 = MIN_SERVO_POS_1;
+	servo_pos_2 = MIN_SERVO_POS_2;
 	dir_1 = -1;
 	dir_2 = -1;
 	force_1 = -1;
@@ -105,7 +106,7 @@ void loop()
 	/* Find out direction of flag movement - Note that the sensor value decreases 
 	the farther it is from the sensor */
 	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1, MIN_FLAG_DISP_1 );	
-	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2, MIN_FLAG_DISP_1 );
+	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2, MIN_FLAG_DISP_2 );
 	
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
