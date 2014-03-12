@@ -832,7 +832,7 @@ void updateHaptics(void)
 					if (pos1 > 0.3)
 					{
  						pos1 = 0.126*pow(pos1,-1.07);
-						pos1 = (pos1+pos1_1+pos1_2)/3;
+						pos1 = (pos1+pos1_1+pos1_2+pos1_3)/4;
 						pos1_5 = pos1_4;
 						pos1_4 = pos1_3;
 						pos1_3 = pos1_2;
@@ -848,7 +848,7 @@ void updateHaptics(void)
 					if (pos2 > 0.3)
 					{
  						pos2 = 0.126*pow(pos2,-1.07);
-						pos2 = (pos2 + pos2_1 + pos2_2)/3;
+						pos2 = (pos2 + pos2_1 + pos2_2+pos2_3)/4;
 						pos2_5 = pos2_4;
 						pos2_4 = pos2_3;
 						pos2_3 = pos2_2;
@@ -886,7 +886,7 @@ void updateHaptics(void)
 
 			if (abs(dx1) < 0.1)
 			{
-				overall_pos1 += dx1*10;
+				overall_pos1 += dx1*12;
 				if (overall_pos1 > 0.1)
 				{
 					overall_pos1 = 0.1;
@@ -898,7 +898,7 @@ void updateHaptics(void)
 
 			if (abs(dx2) < 0.1)
 			{
-				overall_pos2 -= dx2*10;
+				overall_pos2 -= dx2*12;
 				if (overall_pos2 < -0.1)
 				{
 					overall_pos2 = -0.1;
@@ -1096,7 +1096,7 @@ void updateHaptics(void)
             }
 
             // the user is touching an object
-            if (object_index_finger != NULL && object_thumb != NULL)
+            if (object_index_finger != NULL && object_thumb != NULL && object_index_finger == object_thumb)
             {
                 // check if object is attached to an external ODE parent
                 cGenericType* externalParent = object_index_finger->getExternalParent();
