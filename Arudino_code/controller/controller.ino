@@ -87,10 +87,11 @@ void loop()
 	IR_val_2[ 0 ] = average( IR_val_2 );
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );
 	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
-
+	
 #ifdef REMOTE
 	/* Send the IR value in voltage to the remote robot this is used to figure 
 	out the finger position */
+	//sendFingerPos2Remote( convertToDP( IR_val_1_cur * IR_RES, 4 ), convertToDP( IR_val_2_cur * IR_RES, 4 ) );
 	sendFingerPos2Remote( ( float ) IR_val_1_cur * IR_RES, ( float ) IR_val_2_cur * IR_RES );
 #else
 	//print1IRval( IR_val_2_cur );
@@ -201,9 +202,9 @@ void print1IRval( int val )
 void sendFingerPos2Remote( float pos_1, float pos_2 )
 {
 	Serial.print( 'i' );
-	Serial.print( pos_1, DEC );
+	Serial.print( pos_1, 3 );
 	Serial.print( '/' );
-	Serial.print( pos_2, DEC );
+	Serial.print( pos_2, 3 );
 	Serial.println( 'e' );
 }
 
