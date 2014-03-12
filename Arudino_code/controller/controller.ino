@@ -23,7 +23,7 @@ const int IR_PIN_2 = 1;			//IR 2 connected to analog pin 2
 const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
 const int LOOP_DELAY = 100;		//ms
-
+const int NUM_DECIMAL_PLACES = 3;
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
 Servo servo_obj_2;				//Servo 2
@@ -202,9 +202,9 @@ void print1IRval( int val )
 void sendFingerPos2Remote( float pos_1, float pos_2 )
 {
 	Serial.print( 'i' );
-	Serial.print( pos_1, 3 );
+	Serial.print( pos_1, NUM_DECIMAL_PLACES );
 	Serial.print( '/' );
-	Serial.print( pos_2, 3 );
+	Serial.print( pos_2,NUM_DECIMAL_PLACES );
 	Serial.println( 'e' );
 }
 
