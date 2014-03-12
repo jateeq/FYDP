@@ -10,7 +10,10 @@
 const int MIN_FLAG_DISP = 3;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP_1 = 7;	//Servo will move this many degrees every time actuated
 const int MIN_SERVO_POS_1 = 70;	//degrees
-const int MAX_SERVO_POS_1 = 160;	//degrees
+const int MAX_SERVO_POS_1 = 130;	//degrees
+const int MIN_SERVO_DISP_2 = 7;	//Servo will move this many degrees every time actuated
+const int MIN_SERVO_POS_2 = 30;	//degrees
+const int MAX_SERVO_POS_2 = 70;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -120,13 +123,13 @@ void loop()
 	if (getForce( serialMsg, &force_1, &force_2	))
 	{
 		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );		
-		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
+		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
 	}
 #else
 	force_1 = 0;
 	force_2 = 0;
 	updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
-	updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );	
+	updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );	
 #endif	 	
 	
 	//Record previous IR vals so change in flag position can be found
