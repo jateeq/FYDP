@@ -4,13 +4,13 @@
 
 #include <Servo.h>
 
-#define REMOTE 1
+//#define REMOTE 1
 
 /* Constants */
-const int MIN_FLAG_DISP = 4;	//Min dist flag has to move in either direction to move servo
-const int MIN_SERVO_DISP = 10;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS = 70;	//degrees
-const int MAX_SERVO_POS = 120;	//degrees
+const int MIN_FLAG_DISP = 3;	//Min dist flag has to move in either direction to move servo
+const int MIN_SERVO_DISP_1 = 7;	//Servo will move this many degrees every time actuated
+const int MIN_SERVO_POS_1 = 70;	//degrees
+const int MAX_SERVO_POS_1 = 160;	//degrees
 const int NUM_IR_READINGS = 5;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -18,7 +18,8 @@ const int IR_PIN_1 = 0;			//IR 1 connected to analog pin 1
 const int IR_PIN_2 = 1;			//IR 2 connected to analog pin 2
 const int SERVO_PIN_1 = 9;		//Servo 1 connected to digital pin 9
 const int SERVO_PIN_2 = 10;		//Servo 2 connected to digital pin 10
-const int LOOP_DELAY = 75;		//ms
+//const int LOOP_DELAY = 75;		//ms
+const int LOOP_DELAY = 100;		//ms
 
 /* House Keeping */
 Servo servo_obj_1;				//Servo 1 
@@ -57,12 +58,14 @@ void setup()
 	Serial.begin( BAUD_RATE );		
 	 
 	/* Initialize values */
-	servo_pos_1 = MIN_SERVO_POS;
-	servo_pos_2 = MIN_SERVO_POS;
+	servo_pos_1 = MIN_SERVO_POS_1;
+	servo_pos_2 = MIN_SERVO_POS_1;
 	dir_1 = -1;
 	dir_2 = -1;
 	force_1 = -1;
 	force_2 = -1;
+	IR_val_1_prev = 0;
+	IR_val_2_prev = 0;
 	
 	servo_obj_1.write( servo_pos_1 );
 	servo_obj_2.write( servo_pos_2 );
@@ -70,11 +73,7 @@ void setup()
 
 
 void loop() 
-{
-	//Record previous IR vals so change in flag position can be found
-	IR_val_1_prev = IR_val_1_cur;
-	IR_val_2_prev = IR_val_2_cur;
-	
+{	
 	/* Read a sequence of IR readings, average to filter out some noise */
 	for ( int i = 0 ; i < NUM_IR_READINGS ; i++ )
 	{
@@ -85,11 +84,22 @@ void loop()
 	IR_val_2[ 0 ] = average( IR_val_2 );
 	IR_val_1_cur =  smooth( IR_val_1[ 0 ], 0.7, IR_val_1_prev );
 	IR_val_2_cur =  smooth( IR_val_2[ 0 ], 0.7, IR_val_2_prev );
-	
+
+#ifdef REMOTE
 	/* Send the IR value in voltage to the remote robot this is used to figure 
 	out the finger position */
 	sendFingerPos2Remote( ( float ) IR_val_1_cur * IR_RES, ( float ) IR_val_2_cur * IR_RES );
-	
+#else
+	//print1IRval( IR_val_2_cur );
+	Serial.print( IR_val_1_prev );
+	Serial.print('/');
+	Serial.print( IR_val_2_prev );
+	Serial.print(' ');
+	Serial.print( IR_val_1_cur );
+	Serial.print('/');
+	Serial.println( IR_val_2_cur );
+#endif
+
 	/* Find out direction of flag movement - Note that the sensor value decreases 
 	the farther it is from the sensor */
 	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1 );	
@@ -109,22 +119,27 @@ void loop()
 	force_2 = -1;
 	if (getForce( serialMsg, &force_1, &force_2	))
 	{
+		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );		
+		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
+	}
 #else
 	force_1 = 0;
 	force_2 = 0;
-#endif
-		updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1);
-		updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2 );
-#ifdef REMOTE
-	}		
+	updateServo( &servo_pos_1, &servo_obj_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
+	updateServo( &servo_pos_2, &servo_obj_2, force_2, dir_2, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );	
 #endif	 	
+	
+	//Record previous IR vals so change in flag position can be found
+	IR_val_1_prev = IR_val_1_cur;
+	IR_val_2_prev = IR_val_2_cur;
 	
 	// Delay added for optimal performance
 	delay( LOOP_DELAY );
 }
 
 
-void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int direction )
+void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int direction, int min_servo_disp, int min_servo_pos,
+					int max_servo_pos )
 {  	
 	int servo_pos = *servo_pos_handle;
 	/* move servo if no object detected */
@@ -136,16 +151,16 @@ void updateServo( int * servo_pos_handle, Servo * servo_obj, int force, int dire
 	{		
 		if ( direction == 1 )
 		{
-			if( servo_pos < MAX_SERVO_POS )
+			if( servo_pos < max_servo_pos )
 			{
-				servo_pos += MIN_SERVO_DISP;
+				servo_pos += min_servo_disp;
 			}
 		}
 		else if ( direction == 0 )
 		{
-			if( servo_pos > MIN_SERVO_POS )
+			if( servo_pos > min_servo_pos )
 			{
-				servo_pos -= MIN_SERVO_DISP;
+				servo_pos -= min_servo_disp;
 			}
 		}
 		
