@@ -9,14 +9,16 @@
 
 
 /* Constants */
-const int MIN_FLAG_DISP_1 = 3;	//Min dist flag has to move in either direction to move servo
+const int MIN_FLAG_DISP_1 = 2;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP_1 = 7;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS_1 = 90;	//degrees
-const int MAX_SERVO_POS_1 = 120;	//degrees
+const int MIN_SERVO_POS_1 = 70;	//degrees
+const int MAX_SERVO_POS_1 = 110;	//degrees
+
 const int MIN_FLAG_DISP_2 = 4;	//Min dist flag has to move in either direction to move servo
 const int MIN_SERVO_DISP_2 = 10;	//Servo will move this many degrees every time actuated
-const int MIN_SERVO_POS_2 = 30;	//degrees
-const int MAX_SERVO_POS_2 = 140;	//degrees
+const int MIN_SERVO_POS_2 = 90;	//degrees
+const int MAX_SERVO_POS_2 = 130;	//degrees
+
 const int NUM_IR_READINGS = 10;	//this many readings taken and averaged to get overall reading
 const int BAUD_RATE = 9600; 	//Arduino Baud Rate
 const float IR_RES = 5.0/1023; 	//Resolution of IR sensor
@@ -28,9 +30,9 @@ const int LOOP_DELAY = 100;		//ms
 const int NUM_DECIMAL_PLACES = 3;
 
 #ifdef UPDATE_WITH_IR
-const int MIN_FLAG_POS_1 = 300;
-const int MAX_FLAG_POS_1 = 600;
-const int MIN_FLAG_POS_2 = 600;
+const int MIN_FLAG_POS_1 = 490;
+const int MAX_FLAG_POS_1 = 420;
+const int MIN_FLAG_POS_2 = 430;
 const int MAX_FLAG_POS_2 = 400;
 #endif
 
@@ -98,12 +100,12 @@ void loop()
 	sendFingerPos2Remote( ( float ) IR_val_1_cur * IR_RES, ( float ) IR_val_2_cur * IR_RES );
 #endif
 
-#ifndef UPDATE_WITH_IR
+//#ifndef UPDATE_WITH_IR
 	/* Find out direction of flag movement - Note that the sensor value decreases 
 	the farther it is from the sensor */
 	FindFingerDir( IR_val_1_cur, IR_val_1_prev, &dir_1, MIN_FLAG_DISP_1 );	
 	FindFingerDir( IR_val_2_cur, IR_val_2_prev, &dir_2, MIN_FLAG_DISP_2 );
-#endif
+//#endif
 
 	/* get the force being applied to the remote robot */
 	serialMsg = "";
@@ -119,8 +121,19 @@ void loop()
 	force_2 = -1;
 	if ( getForce( serialMsg, &force_1, &force_2 ) )
 	{
+	#ifdef UPDATE_WITH_IR
+		if( !force_1 )
+		{
+			servo_pos_1 = updateServoWithIR( IR_val_1_cur, MIN_FLAG_POS_1, MAX_FLAG_POS_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
+		}
+		if( !force_2 )
+		{
+			servo_pos_2 = updateServoWithIR( IR_val_2_cur, MIN_FLAG_POS_2, MAX_FLAG_POS_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
+		}
+	#else
 		servo_pos_1 = updateServo( servo_pos_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
 		servo_pos_2 = updateServo( servo_pos_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
+	#endif
 	}
 #else
 	#ifdef UPDATE_WITH_IR	
@@ -130,11 +143,11 @@ void loop()
 	servo_pos_1 = updateServo( servo_pos_1, force_1, dir_1, MIN_SERVO_DISP_1, MIN_SERVO_POS_1, MAX_SERVO_POS_1 );
 	servo_pos_2 = updateServo( servo_pos_2, force_2, dir_2, MIN_SERVO_DISP_2, MIN_SERVO_POS_2, MAX_SERVO_POS_2 );
 	#endif
-#endif
- 	Serial.print( IR_val_2_cur );
+	Serial.print( IR_val_1_cur );
 	Serial.print('/');
-	Serial.println( servo_pos_2 );
-	
+	Serial.println( servo_pos_1 );
+#endif
+
 	//Move the servos to the new position
 	servo_obj_1.write( servo_pos_1 );
 	servo_obj_2.write( servo_pos_2 );
@@ -168,6 +181,7 @@ int updateServoWithIR( int IR_reading, int min_flag_pos, int max_flag_pos, int m
 	int servo_pos;
 	servo_pos = map( IR_reading, min_flag_pos, max_flag_pos, min_servo_pos, max_servo_pos );
 	servo_pos = constrain( servo_pos, min_servo_pos, max_servo_pos ); //map does not constrain range bounds
+	//Serial.println( servo_pos );
 	return servo_pos;
 }
 
@@ -201,6 +215,7 @@ void FindFingerDir( int cur, int prev, int * dir, int min_flag_disp )
 	{
 		//flag is moving towards IR sensor (finger moving up)		
 		*dir = 0;
+		
 	}
 	else if ( ( cur - prev ) < ( - min_flag_disp ) )
 	{
@@ -211,6 +226,7 @@ void FindFingerDir( int cur, int prev, int * dir, int min_flag_disp )
 	{
 		*dir = -1;
 	}
+	//Serial.println(*dir);
 }
 
 void print1IRval( int val )
