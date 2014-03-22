@@ -822,8 +822,9 @@ void updateHaptics(void)
 		}
 		int seconds = (time_now-time_before);
 		double dt = seconds/1000.0;
+		double delay = 0.05;
 					//	printf("Elapsed time: %f seconds\n", dt);
-		if ( dt > 0.100)
+		if ( dt > delay)
 		{
 			if (sp->ReadData(serialData, strlen(serialData)) > 0)
 			{
@@ -886,11 +887,11 @@ void updateHaptics(void)
 
 			if (abs(dx1) < 0.1)
 			{
-				overall_pos1 += dx1*12;
-				if (overall_pos1 > 0.1)
+				overall_pos1 -= dx1*50;
+				if (overall_pos1 < -0.1)
 				{
-					overall_pos1 = 0.1;
-				} else if(overall_pos1 < 0)
+					overall_pos1 = -0.1;
+				} else if(overall_pos1 > 0)
 				{
 					overall_pos1 = 0;
 				}
@@ -898,11 +899,11 @@ void updateHaptics(void)
 
 			if (abs(dx2) < 0.1)
 			{
-				overall_pos2 -= dx2*12;
-				if (overall_pos2 < -0.1)
+				overall_pos2 += dx2*60;
+				if (overall_pos2 > 0.1)
 				{
-					overall_pos2 = -0.1;
-				} else if(overall_pos2 > 0)
+					overall_pos2 = 0.1;
+				} else if(overall_pos2 < 0)
 				{
 					overall_pos2 = 0;
 				}
@@ -914,14 +915,14 @@ void updateHaptics(void)
 		previous_pos1 = pos1;
 		previous_pos2 = pos2;
 
-		index_finger->setPos(pos.x, pos.y + 0.25 - overall_pos1, pos.z - 0.25);
+		index_finger->setPos(pos.x, pos.y + 0.25 + overall_pos1, pos.z - 0.25);
 		index_finger->setRot(rot);
 
 		index_finger->computeInteractionForces();
 
 		index_finger->updatePose();
 
-		thumb->setPos(pos.x, pos.y - 0.25 - overall_pos2, pos.z - 0.25);
+		thumb->setPos(pos.x, pos.y - 0.25 + overall_pos2, pos.z - 0.25);
 		thumb->setRot(rot);
 
 		thumb->computeInteractionForces();
@@ -943,7 +944,7 @@ void updateHaptics(void)
 			strcat(to_send, "1/1");
 			strcat(to_send, ";");
 
-			if (abs(overall_pos1 - holding_pos1) > 0.05|| abs(overall_pos2 - holding_pos2) > 0.05)
+			if (abs(overall_pos1 - holding_pos1) > 0.03|| abs(overall_pos2 - holding_pos2) > 0.03)
 			{
 				userSwitch = false;
 			} else 
@@ -979,7 +980,7 @@ void updateHaptics(void)
 			}
 		}
 
-		if (dt > 0.1)
+		if (dt > delay)
 		{
 			if (sp->WriteData(to_send, strlen(to_send)))
 			{
@@ -1003,7 +1004,7 @@ void updateHaptics(void)
 
             // retrieve the position of the tool in global coordinates
 			cVector3d globalToolPos  = (index_finger->getProxyGlobalPos()+thumb->getProxyGlobalPos())/2;
-
+			
             // compute the offset between the tool and grasp point on the object
            /*  cVector3d offset = (globalToolPos - globalGraspObjectPos)*0.1;
             // model a spring between both points
@@ -1038,10 +1039,13 @@ void updateHaptics(void)
 				// apply attraction force (grasp) onto object
 				//graspObject->addGlobalForceAtGlobalPos(force, globalGraspObjectPos);
 			}*/
-			graspObject->disableDynamics();
-			graspObject->setPosition(globalToolPos);
+			graspObject->disableDynamics();	
 			
-			previous_object_pos = globalGraspPos;
+			if(globalToolPos.z < -0.83)
+				globalToolPos.z = -0.83;
+
+			graspObject->setPosition(globalToolPos);	
+
             graspLine->m_pointA = globalGraspPos;
             graspLine->m_pointB = globalToolPos;
 

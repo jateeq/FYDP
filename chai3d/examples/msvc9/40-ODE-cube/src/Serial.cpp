@@ -231,26 +231,26 @@ bool Serial::parse_num(char *data, double &num1, double &num2)
 
   	if (i_ind < e_ind)
 	{
-		char serialData[50];
+		char serialData1[50], serialData2[50];
 		index = 0;
 		for (int i = i_ind+1; i < slash_ind; i++)
 		{
-			serialData[index] = data[i];
+			serialData1[index] = data[i];
 			index++;
 		}
-		serialData[++index] = '\0';
+		serialData1[++index] = '\0';
 
-		num1 = atof(serialData);
+		num1 = atof(serialData1);
 
 		index = 0;
 		for (int i = slash_ind+1; i < e_ind; i++)
 		{
-			serialData[index] = data[i];
+			serialData2[index] = data[i];
 			index++;
 		}
-		serialData[++index] = '\0';
+		serialData2[++index] = '\0';
 
-		num2 = atof(serialData);
+		num2 = atof(serialData2);
 
 		return true;
 	} else 
